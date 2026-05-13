@@ -33,6 +33,10 @@ void DrawPostProcessPanel(
             if (ImGui::Combo("Mode", &mode, modes, _countof(modes))) {
                 pass.parameters.grayscaleMode = static_cast<float>(mode);
             }
+        } else if (pass.pipeline == "Vignette") {
+            ImGui::SliderFloat("Radius", &pass.parameters.vignetteRadius, 0.0f, 1.5f);
+            ImGui::SliderFloat("Softness", &pass.parameters.vignetteSoftness, 0.01f, 1.0f);
+            ImGui::SliderFloat("Power", &pass.parameters.vignettePower, 0.1f, 4.0f);
         }
         ImGui::Text("  %s -> %s pipeline=%s scale=%.2f",
             pass.inputResource.c_str(),

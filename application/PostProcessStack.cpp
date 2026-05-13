@@ -2,6 +2,25 @@
 
 #include <utility>
 
+namespace {
+constexpr const char* kPostProcessOutputResource = "PostProcessOutput";
+constexpr const char* kPostProcessSwapOutputResource = "PostProcessSwapOutput";
+
+std::string ResolvePostProcessInputResource(std::string_view resource, std::string_view currentOutput) {
+    if (resource == kPostProcessOutputResource) {
+        return std::string(currentOutput);
+    }
+    return std::string(resource);
+}
+
+std::string ResolvePostProcessOutputResource(std::string_view resource, std::string_view currentOutput) {
+    if (resource != kPostProcessSwapOutputResource) {
+        return std::string(resource);
+    }
+    return currentOutput == "PostColorA" ? "PostColorB" : "PostColorA";
+}
+} // namespace
+
 void PostProcessStack::ResetToVfxDefaults() {
     passes_.clear();
     PostProcessPass bloomExtract{};
@@ -167,16 +186,31 @@ void PostProcessStack::ResetToVfxDefaults() {
 
     PostProcessPass grayscale{};
     grayscale.name = "Grayscale";
-    grayscale.inputResource = "PostColorA";
-    grayscale.outputResource = "PostColorB";
+    grayscale.inputResource = kPostProcessOutputResource;
+    grayscale.outputResource = kPostProcessSwapOutputResource;
     grayscale.pipeline = "Grayscale";
-    grayscale.secondaryInputResource = "PostColorA";
-    grayscale.tertiaryInputResource = "PostColorA";
+    grayscale.secondaryInputResource = kPostProcessOutputResource;
+    grayscale.tertiaryInputResource = kPostProcessOutputResource;
     grayscale.enabled = true;
     grayscale.intensity = 1.0f;
     grayscale.resolutionScale = 1.0f;
     grayscale.parameters.grayscaleMode = 1.0f;
     passes_.push_back(grayscale);
+
+    PostProcessPass vignette{};
+    vignette.name = "Vignette";
+    vignette.inputResource = kPostProcessOutputResource;
+    vignette.outputResource = kPostProcessSwapOutputResource;
+    vignette.pipeline = "Vignette";
+    vignette.secondaryInputResource = kPostProcessOutputResource;
+    vignette.tertiaryInputResource = kPostProcessOutputResource;
+    vignette.enabled = true;
+    vignette.intensity = 1.0f;
+    vignette.resolutionScale = 1.0f;
+    vignette.parameters.vignetteRadius = 0.75f;
+    vignette.parameters.vignetteSoftness = 0.35f;
+    vignette.parameters.vignettePower = 1.0f;
+    passes_.push_back(vignette);
 }
 
 void PostProcessStack::SetEnabled(const std::string& name, bool enabled) {
@@ -231,17 +265,25 @@ PostProcessExecutionPlan PostProcessStack::BuildExecutionPlan() const {
             continue;
         }
 
-        const bool hasPrimaryInput = availableResources.contains(pass.inputResource);
-        const bool hasSecondaryInput = availableResources.contains(pass.secondaryInputResource);
-        const bool hasTertiaryInput = availableResources.contains(pass.tertiaryInputResource);
+        PostProcessPass resolvedPass = pass;
+        resolvedPass.inputResource = ResolvePostProcessInputResource(pass.inputResource, plan.finalOutputResource);
+        resolvedPass.outputResource = ResolvePostProcessOutputResource(pass.outputResource, plan.finalOutputResource);
+        resolvedPass.secondaryInputResource =
+            ResolvePostProcessInputResource(pass.secondaryInputResource, plan.finalOutputResource);
+        resolvedPass.tertiaryInputResource =
+            ResolvePostProcessInputResource(pass.tertiaryInputResource, plan.finalOutputResource);
+
+        const bool hasPrimaryInput = availableResources.contains(resolvedPass.inputResource);
+        const bool hasSecondaryInput = availableResources.contains(resolvedPass.secondaryInputResource);
+        const bool hasTertiaryInput = availableResources.contains(resolvedPass.tertiaryInputResource);
         if (!hasPrimaryInput || !hasSecondaryInput || !hasTertiaryInput) {
             continue;
         }
 
         PostProcessExecutionPass executionPass{};
-        executionPass.pass = pass;
-        plan.finalOutputResource = pass.outputResource;
-        availableResources.insert(pass.outputResource);
+        executionPass.pass = std::move(resolvedPass);
+        plan.finalOutputResource = executionPass.pass.outputResource;
+        availableResources.insert(executionPass.pass.outputResource);
         plan.passes.push_back(std::move(executionPass));
     }
 
