@@ -20,7 +20,13 @@ ComponentDrawParams ResolveParticleDrawParams(
         resolved->depthFadeSoftness,
         defaults.distortionDepthAttenuation,
         resolved->edgeSoftness,
-        defaults.trailTailFade
+        defaults.trailTailFade,
+        resolved->dissolveThreshold,
+        resolved->dissolveEdgeWidth,
+        resolved->dissolveEdgeColor,
+        resolved->dissolveEnabled,
+        resolved->dissolvePreviewFillEnabled,
+        resolved->dissolvePreviewFillColor
     };
 }
 
@@ -104,13 +110,24 @@ void DrawIndirectSpriteComponents(
         commandList->SetGraphicsRootDescriptorTable(3, context.depthTextureHandle);
     }
 
-    const float depthFadeParams[4] = {
+    const float drawParamsData[16] = {
         drawParams.depthFadeSoftness,
         drawParams.distortionDepthAttenuation,
         drawParams.particleEdgeSoftness,
-        drawParams.trailTailFade
+        drawParams.trailTailFade,
+        drawParams.dissolveThreshold,
+        drawParams.dissolveEdgeWidth,
+        drawParams.dissolveEdgeColor.x,
+        drawParams.dissolveEdgeColor.y,
+        drawParams.dissolveEdgeColor.z,
+        drawParams.dissolveEnabled,
+        drawParams.dissolvePreviewFillEnabled,
+        drawParams.dissolvePreviewFillColor.x,
+        drawParams.dissolvePreviewFillColor.y,
+        drawParams.dissolvePreviewFillColor.z,
+        0.0f
     };
-    commandList->SetGraphicsRoot32BitConstants(4, 4, depthFadeParams, 0);
+    commandList->SetGraphicsRoot32BitConstants(4, 16, drawParamsData, 0);
     commandList->ExecuteIndirect(
         context.gpuParticleSystem->CommandSignature(),
         1,

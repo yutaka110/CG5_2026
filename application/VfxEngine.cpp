@@ -29,6 +29,12 @@ void ApplyLiveTuningToComponent(
     EffectParticleSettings& destination) {
     destination.depthFadeSoftness = source.settings->depthFadeSoftness;
     destination.edgeSoftness = source.settings->edgeSoftness;
+    destination.dissolveEnabled = source.settings->dissolveEnabled;
+    destination.dissolveThreshold = source.settings->dissolveThreshold;
+    destination.dissolveEdgeWidth = source.settings->dissolveEdgeWidth;
+    destination.dissolveEdgeColor = source.settings->dissolveEdgeColor;
+    destination.dissolvePreviewFillEnabled = source.settings->dissolvePreviewFillEnabled;
+    destination.dissolvePreviewFillColor = source.settings->dissolvePreviewFillColor;
 }
 
 void ApplyLiveTuningToComponent(
@@ -243,23 +249,28 @@ void VfxEngine::BeginFrame() {
 }
 
 void VfxEngine::Update(AppVfxRuntimeState& runtimeState, float deltaTime) {
-    if (runtimeState.autoPlayVfxDemo) {
-        runtimeState.enableParticles = true;
+    if (runtimeState.autoPlayVfxDemo && runtimeState.enableEffectSpawning) {
         runtimeState.autoPlayVfxTimer -= deltaTime;
         runtimeState.autoPlayVfxAngle += 0.9f * deltaTime;
         if (runtimeState.autoPlayVfxTimer <= 0.0f) {
-            const float radius = (std::max)(0.0f, runtimeState.autoPlayVfxRadius);
-            const float angle = runtimeState.autoPlayVfxAngle;
-            const Vector3 effectPosition = {
-                std::cos(angle) * radius,
-                std::sin(angle * 1.7f) * 0.65f,
-                std::sin(angle) * radius
-            };
-            effectRuntime_.PlayEffectWithParams(
-                "warp_core",
-                effectPosition,
-                {1.0f, 0.8f, 0.45f, 1.0f},
-                {1.15f, 1.15f, 1.15f});
+            const uint32_t maxActive = runtimeState.maxActiveEffectInstances;
+            const bool underActiveLimit =
+                maxActive == 0 ||
+                effectRuntime_.Instances().size() < static_cast<size_t>(maxActive);
+            if (underActiveLimit) {
+                const float radius = (std::max)(0.0f, runtimeState.autoPlayVfxRadius);
+                const float angle = runtimeState.autoPlayVfxAngle;
+                const Vector3 effectPosition = {
+                    std::cos(angle) * radius,
+                    std::sin(angle * 1.7f) * 0.65f,
+                    std::sin(angle) * radius
+                };
+                effectRuntime_.PlayEffectWithParams(
+                    "warp_core",
+                    effectPosition,
+                    {1.0f, 0.8f, 0.45f, 1.0f},
+                    {1.15f, 1.15f, 1.15f});
+            }
             runtimeState.autoPlayVfxTimer = (std::max)(0.1f, runtimeState.autoPlayVfxInterval);
         }
     }
@@ -322,7 +333,7 @@ void VfxEngine::ReloadChangedEffectAssets() {
 void VfxEngine::RegisterDefaultTextures(const AppSceneResources& scene) {
     effectResourceCache_.RegisterTexture({"default", scene.textureSrvHandleCPU, scene.textureSrvHandleGPU, 1, 1});
     effectResourceCache_.RegisterTexture({"monsterBall", scene.textureSrvHandleCPU2, scene.textureSrvHandleGPU2, 1, 1});
-    effectResourceCache_.RegisterTexture({"streakNoise", scene.textureSrvHandleCPU, scene.textureSrvHandleGPU, 1, 1});
+    effectResourceCache_.RegisterTexture({"streakNoise", scene.streakNoiseSrvHandleCPU, scene.streakNoiseSrvHandleGPU, 1, 1});
 }
 
 void VfxEngine::RegisterRenderPasses(

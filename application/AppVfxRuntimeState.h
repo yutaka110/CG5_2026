@@ -110,6 +110,8 @@ struct AppVfxRuntimeState {
     std::string beamDedicatedDefaultOnHealth = "warmup";
 
     bool autoPlayVfxDemo = true;
+    bool enableEffectSpawning = true;
+    uint32_t maxActiveEffectInstances = 4;
     float autoPlayVfxInterval = 0.6f;
     float autoPlayVfxRadius = 2.5f;
     float autoPlayVfxTimer = 0.0f;

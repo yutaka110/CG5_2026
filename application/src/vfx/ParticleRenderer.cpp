@@ -212,6 +212,10 @@ void ParticleRenderer::RegisterPasses(
         vfx::SimulationAccesses(vfxResources.particle.simulation),
         "",
         [this, ctx, vfxResources](ge3::graphics::RenderPassContext& passContext) {
+            const ParticleRenderQueue& queue = ctx.effectRuntime->particleQueue;
+            if (!ctx.runtimeState->vfx.enableParticles && queue.empty()) {
+                return;
+            }
             Simulate(
                 passContext.commandList,
                 vfx::BuildPassRenderContext(ctx, vfxResources),

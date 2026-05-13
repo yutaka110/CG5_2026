@@ -60,6 +60,9 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     if (name == "Vignette") {
         return pipelines.GetVignettePSO();
     }
+    if (name == "DissolvePreview") {
+        return pipelines.GetDissolvePreviewPSO();
+    }
     return nullptr;
 }
 
@@ -146,6 +149,20 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[12]) {
         passParams[1] = postPass.parameters.vignetteRadius;
         passParams[2] = postPass.parameters.vignetteSoftness;
         passParams[3] = postPass.parameters.vignettePower;
+        return;
+    }
+    if (postPass.pipeline == "DissolvePreview") {
+        passParams[1] = postPass.parameters.dissolvePreviewThreshold;
+        passParams[2] = postPass.parameters.dissolvePreviewEdgeWidth;
+        passParams[3] = postPass.parameters.dissolvePreviewNoiseScale;
+        passParams[4] = postPass.parameters.dissolvePreviewFillR;
+        passParams[5] = postPass.parameters.dissolvePreviewFillG;
+        passParams[6] = postPass.parameters.dissolvePreviewFillB;
+        passParams[7] = postPass.parameters.dissolvePreviewEdgeR;
+        passParams[8] = postPass.parameters.dissolvePreviewEdgeG;
+        passParams[9] = postPass.parameters.dissolvePreviewEdgeB;
+        passParams[10] = postPass.parameters.dissolvePreviewPlaneScaleX;
+        passParams[11] = postPass.parameters.dissolvePreviewPlaneScaleY;
         return;
     }
 }

@@ -61,6 +61,11 @@ Vector4 ToVector4(const std::string& value, const Vector4& fallback) {
     return result;
 }
 
+Vector3 ToVector3(const std::string& value, const Vector3& fallback) {
+    const Vector4 parsed = ToVector4(value, {fallback.x, fallback.y, fallback.z, 1.0f});
+    return {parsed.x, parsed.y, parsed.z};
+}
+
 uint32_t ToUint(const std::string& value, uint32_t fallback) {
     try {
         return static_cast<uint32_t>((std::max)(0, std::stoi(value)));
@@ -124,6 +129,18 @@ bool ApplyParticleSettingsKey(
         settings.depthFadeSoftness = ToFloat(value, settings.depthFadeSoftness);
     } else if (key == "particleEdgeSoftness" || key == "edgeSoftness") {
         settings.edgeSoftness = ToFloat(value, settings.edgeSoftness);
+    } else if (key == "dissolveEnabled") {
+        settings.dissolveEnabled = ToFloat(value, settings.dissolveEnabled);
+    } else if (key == "dissolve" || key == "dissolveThreshold") {
+        settings.dissolveThreshold = ToFloat(value, settings.dissolveThreshold);
+    } else if (key == "dissolveEdgeWidth" || key == "dissolveWidth") {
+        settings.dissolveEdgeWidth = ToFloat(value, settings.dissolveEdgeWidth);
+    } else if (key == "dissolveEdgeColor") {
+        settings.dissolveEdgeColor = ToVector3(value, settings.dissolveEdgeColor);
+    } else if (key == "dissolvePreviewFillEnabled" || key == "dissolvePreviewFill") {
+        settings.dissolvePreviewFillEnabled = ToFloat(value, settings.dissolvePreviewFillEnabled);
+    } else if (key == "dissolvePreviewFillColor") {
+        settings.dissolvePreviewFillColor = ToVector3(value, settings.dissolvePreviewFillColor);
     } else {
         return false;
     }
@@ -278,6 +295,18 @@ bool ApplyLegacyAssetSettingsKey(
         asset.defaultDistortion.depthAttenuation = ToFloat(value, asset.defaultDistortion.depthAttenuation);
     } else if (key == "particleEdgeSoftness" || key == "edgeSoftness") {
         asset.defaultParticle.edgeSoftness = ToFloat(value, asset.defaultParticle.edgeSoftness);
+    } else if (key == "dissolveEnabled") {
+        asset.defaultParticle.dissolveEnabled = ToFloat(value, asset.defaultParticle.dissolveEnabled);
+    } else if (key == "dissolve" || key == "dissolveThreshold") {
+        asset.defaultParticle.dissolveThreshold = ToFloat(value, asset.defaultParticle.dissolveThreshold);
+    } else if (key == "dissolveEdgeWidth" || key == "dissolveWidth") {
+        asset.defaultParticle.dissolveEdgeWidth = ToFloat(value, asset.defaultParticle.dissolveEdgeWidth);
+    } else if (key == "dissolveEdgeColor") {
+        asset.defaultParticle.dissolveEdgeColor = ToVector3(value, asset.defaultParticle.dissolveEdgeColor);
+    } else if (key == "dissolvePreviewFillEnabled" || key == "dissolvePreviewFill") {
+        asset.defaultParticle.dissolvePreviewFillEnabled = ToFloat(value, asset.defaultParticle.dissolvePreviewFillEnabled);
+    } else if (key == "dissolvePreviewFillColor") {
+        asset.defaultParticle.dissolvePreviewFillColor = ToVector3(value, asset.defaultParticle.dissolvePreviewFillColor);
     } else if (key == "trailTailFade" || key == "tailFade") {
         asset.defaultTrail.trailTailFade = ToFloat(value, asset.defaultTrail.trailTailFade);
     } else if (key == "trailLength") {

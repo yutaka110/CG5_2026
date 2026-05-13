@@ -371,6 +371,9 @@ void EffectSystem::Update(float deltaTime) {
             instances_.end(),
             [](const EffectInstance& instance) {
                 float totalLifetime = instance.asset != nullptr ? instance.asset->lifetime : 0.0f;
+                if (instance.lifetimeOverride > 0.0f) {
+                    totalLifetime = (std::max)(totalLifetime, instance.lifetimeOverride);
+                }
                 if (instance.asset != nullptr) {
                     instance.asset->Components().ForEachComponentCommon(
                         [&totalLifetime](const EffectComponentCommon& component) {
@@ -412,6 +415,13 @@ void EffectSystem::RestartInstance(uint32_t id) {
             component.age = 0.0f;
             component.active = true;
         }
+    }
+}
+
+void EffectSystem::SetInstanceLifetimeOverride(uint32_t id, float lifetimeSeconds) {
+    EffectInstance* instance = FindInstance(id);
+    if (instance != nullptr) {
+        instance->lifetimeOverride = lifetimeSeconds;
     }
 }
 

@@ -196,6 +196,12 @@ struct EffectParticleSettings {
     float spawnRadius = 4.0f;
     float depthFadeSoftness = 0.02f;
     float edgeSoftness = 0.5f;
+    float dissolveEnabled = 0.0f;
+    float dissolveThreshold = 0.0f;
+    float dissolveEdgeWidth = 0.05f;
+    Vector3 dissolveEdgeColor = {1.0f, 0.42f, 0.12f};
+    float dissolvePreviewFillEnabled = 0.0f;
+    Vector3 dissolvePreviewFillColor = {0.0f, 1.0f, 0.0f};
 };
 
 enum class EffectTrailFollowMode : uint32_t {
@@ -628,6 +634,7 @@ struct EffectInstance {
     uint32_t trailHistoryCount = 0;
     Vector4 color = {1.0f, 1.0f, 1.0f, 1.0f};
     float age = 0.0f;
+    float lifetimeOverride = -1.0f;
     bool attached = false;
 };
 
@@ -743,6 +750,7 @@ public:
     void ClearInstances();
     EffectInstance* FindInstance(uint32_t id);
     void RestartInstance(uint32_t id);
+    void SetInstanceLifetimeOverride(uint32_t id, float lifetimeSeconds);
 
     const std::vector<EffectInstance>& Instances() const { return instances_; }
     std::vector<EffectInstance>& MutableInstances() { return instances_; }

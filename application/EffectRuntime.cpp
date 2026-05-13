@@ -219,6 +219,12 @@ void EffectRuntime::RestartInstance(uint32_t id) {
     }
 }
 
+void EffectRuntime::SetInstanceLifetimeOverride(uint32_t id, float lifetimeSeconds) {
+    if (effectSystem_ != nullptr) {
+        effectSystem_->SetInstanceLifetimeOverride(id, lifetimeSeconds);
+    }
+}
+
 void EffectRuntime::ClearInstances() {
     if (effectSystem_ != nullptr) {
         effectSystem_->ClearInstances();
@@ -323,17 +329,21 @@ bool EffectRuntime::BuildActiveComponentCore(
     const EffectComponentInstance& componentInstance,
     const EffectComponentCommon& componentCommon,
     const EffectRendererDescriptor* rendererDescriptor,
-    const EffectSimulationDescriptor* simulationDescriptor,
-    ActiveComponentCore& outCore) {
+        const EffectSimulationDescriptor* simulationDescriptor,
+        ActiveComponentCore& outCore) {
     const float localAge = instance.age - componentCommon.startTime;
+    float effectiveDuration = componentCommon.duration;
+    if (instance.lifetimeOverride > 0.0f) {
+        effectiveDuration = (std::max)(effectiveDuration, instance.lifetimeOverride - componentCommon.startTime);
+    }
     if (localAge < 0.0f ||
-        (componentCommon.duration > 0.0f && localAge >= componentCommon.duration)) {
+        (effectiveDuration > 0.0f && localAge >= effectiveDuration)) {
         return false;
     }
 
     float normalizedAge = 0.0f;
-    if (componentCommon.duration > 0.0f) {
-        normalizedAge = localAge / componentCommon.duration;
+    if (effectiveDuration > 0.0f) {
+        normalizedAge = localAge / effectiveDuration;
         if (normalizedAge > 1.0f) {
             normalizedAge = 1.0f;
         }

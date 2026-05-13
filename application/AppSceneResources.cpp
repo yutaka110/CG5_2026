@@ -227,6 +227,11 @@ bool AppSceneResources::Initialize(
     textureResource2 = AppRenderResources::CreateTextureResource(device, metadata2);
     AppRenderResources::UploadTextureData(textureResource2, mipImages2);
 
+    DirectX::ScratchImage streakNoiseMipImages = AppRenderResources::LoadTexture("resources/streakNoise.png");
+    const DirectX::TexMetadata& streakNoiseMetadata = streakNoiseMipImages.GetMetadata();
+    streakNoiseTextureResource = AppRenderResources::CreateTextureResource(device, streakNoiseMetadata);
+    AppRenderResources::UploadTextureData(streakNoiseTextureResource, streakNoiseMipImages);
+
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = metadata.format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -246,6 +251,19 @@ bool AppSceneResources::Initialize(
     textureSrvHandleCPU2 = AppRenderResources::GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
     textureSrvHandleGPU2 = AppRenderResources::GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
     device->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC streakNoiseSrvDesc{};
+    streakNoiseSrvDesc.Format = streakNoiseMetadata.format;
+    streakNoiseSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    streakNoiseSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    streakNoiseSrvDesc.Texture2D.MipLevels = UINT(streakNoiseMetadata.mipLevels);
+
+    streakNoiseSrvHandleCPU = AppRenderResources::GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
+    streakNoiseSrvHandleGPU = AppRenderResources::GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
+    device->CreateShaderResourceView(
+        streakNoiseTextureResource.Get(),
+        &streakNoiseSrvDesc,
+        streakNoiseSrvHandleCPU);
 
     // =========================================================
     // Sphere mesh
