@@ -514,6 +514,20 @@ bool DrawEffectTypeControls(EffectParticleSettings& particle) {
     bool changed = false;
     changed |= ImGui::SliderFloat("Depth Fade", &particle.depthFadeSoftness, 0.001f, 0.1f, "%.3f");
     changed |= ImGui::SliderFloat("Particle Edge", &particle.edgeSoftness, 0.0f, 1.0f, "%.2f");
+    bool dissolveEnabled = particle.dissolveEnabled >= 0.5f;
+    if (ImGui::Checkbox("Dissolve", &dissolveEnabled)) {
+        particle.dissolveEnabled = dissolveEnabled ? 1.0f : 0.0f;
+        changed = true;
+    }
+    changed |= ImGui::SliderFloat("Dissolve Threshold", &particle.dissolveThreshold, 0.0f, 1.0f, "%.2f");
+    changed |= ImGui::SliderFloat("Dissolve Edge Width", &particle.dissolveEdgeWidth, 0.001f, 0.3f, "%.3f");
+    changed |= ImGui::ColorEdit3("Dissolve Edge Color", &particle.dissolveEdgeColor.x);
+    bool previewFillEnabled = particle.dissolvePreviewFillEnabled >= 0.5f;
+    if (ImGui::Checkbox("Dissolve Preview Fill", &previewFillEnabled)) {
+        particle.dissolvePreviewFillEnabled = previewFillEnabled ? 1.0f : 0.0f;
+        changed = true;
+    }
+    changed |= ImGui::ColorEdit3("Dissolve Preview Fill Color", &particle.dissolvePreviewFillColor.x);
     return changed;
 }
 
@@ -554,6 +568,12 @@ bool DrawEffectTypeControls(EffectBeamSettings&) {
 void ResetEffectTypeToAssetDefault(EffectParticleSettings& particle, const EffectAsset& asset) {
     particle.depthFadeSoftness = asset.defaultParticle.depthFadeSoftness;
     particle.edgeSoftness = asset.defaultParticle.edgeSoftness;
+    particle.dissolveEnabled = asset.defaultParticle.dissolveEnabled;
+    particle.dissolveThreshold = asset.defaultParticle.dissolveThreshold;
+    particle.dissolveEdgeWidth = asset.defaultParticle.dissolveEdgeWidth;
+    particle.dissolveEdgeColor = asset.defaultParticle.dissolveEdgeColor;
+    particle.dissolvePreviewFillEnabled = asset.defaultParticle.dissolvePreviewFillEnabled;
+    particle.dissolvePreviewFillColor = asset.defaultParticle.dissolvePreviewFillColor;
 }
 
 void ResetEffectTypeToAssetDefault(EffectTrailSettings& trail, const EffectAsset& asset) {
@@ -940,6 +960,18 @@ void DrawEffectAssetEditorPanel(
             if (ImGui::TreeNode("Asset Defaults")) {
                 ImGui::SliderFloat("Default Particle Depth Fade", &asset.defaultParticle.depthFadeSoftness, 0.001f, 0.1f, "%.3f");
                 ImGui::SliderFloat("Default Particle Edge", &asset.defaultParticle.edgeSoftness, 0.0f, 1.0f, "%.2f");
+                bool defaultDissolveEnabled = asset.defaultParticle.dissolveEnabled >= 0.5f;
+                if (ImGui::Checkbox("Default Particle Dissolve", &defaultDissolveEnabled)) {
+                    asset.defaultParticle.dissolveEnabled = defaultDissolveEnabled ? 1.0f : 0.0f;
+                }
+                ImGui::SliderFloat("Default Particle Dissolve Threshold", &asset.defaultParticle.dissolveThreshold, 0.0f, 1.0f, "%.2f");
+                ImGui::SliderFloat("Default Particle Dissolve Edge Width", &asset.defaultParticle.dissolveEdgeWidth, 0.001f, 0.3f, "%.3f");
+                ImGui::ColorEdit3("Default Particle Dissolve Edge Color", &asset.defaultParticle.dissolveEdgeColor.x);
+                bool defaultPreviewFillEnabled = asset.defaultParticle.dissolvePreviewFillEnabled >= 0.5f;
+                if (ImGui::Checkbox("Default Particle Dissolve Preview Fill", &defaultPreviewFillEnabled)) {
+                    asset.defaultParticle.dissolvePreviewFillEnabled = defaultPreviewFillEnabled ? 1.0f : 0.0f;
+                }
+                ImGui::ColorEdit3("Default Particle Dissolve Preview Fill Color", &asset.defaultParticle.dissolvePreviewFillColor.x);
                 ImGui::SliderFloat("Default Trail Depth Fade", &asset.defaultTrail.depthFadeSoftness, 0.001f, 0.1f, "%.3f");
                 ImGui::SliderFloat("Default Trail Tail", &asset.defaultTrail.trailTailFade, 0.1f, 4.0f, "%.2f");
                 ImGui::SliderFloat("Default Trail Length", &asset.defaultTrail.length, 0.01f, 16.0f, "%.2f");

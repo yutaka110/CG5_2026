@@ -12,6 +12,12 @@ struct ComponentDrawParams {
     float distortionDepthAttenuation = 1.0f;
     float particleEdgeSoftness = 0.5f;
     float trailTailFade = 1.35f;
+    float dissolveThreshold = 0.0f;
+    float dissolveEdgeWidth = 0.05f;
+    Vector3 dissolveEdgeColor = {1.0f, 0.42f, 0.12f};
+    float dissolveEnabled = 0.0f;
+    float dissolvePreviewFillEnabled = 0.0f;
+    Vector3 dissolvePreviewFillColor = {0.0f, 1.0f, 0.0f};
 };
 
 ComponentDrawParams ResolveParticleDrawParams(

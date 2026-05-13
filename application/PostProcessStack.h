@@ -39,6 +39,17 @@ struct PostProcessPass {
         float radialCenterY = 0.5f;
         float radialBlurWidth = 0.08f;
         float radialSampleCount = 12.0f;
+        float dissolvePreviewThreshold = 0.5f;
+        float dissolvePreviewEdgeWidth = 0.04f;
+        float dissolvePreviewNoiseScale = 8.0f;
+        float dissolvePreviewFillR = 0.0f;
+        float dissolvePreviewFillG = 1.0f;
+        float dissolvePreviewFillB = 0.0f;
+        float dissolvePreviewEdgeR = 1.0f;
+        float dissolvePreviewEdgeG = 0.35f;
+        float dissolvePreviewEdgeB = 0.2f;
+        float dissolvePreviewPlaneScaleX = 0.7f;
+        float dissolvePreviewPlaneScaleY = 0.55f;
     };
 
     std::string name;

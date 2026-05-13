@@ -200,7 +200,7 @@ void PostProcessStack::ResetToVfxDefaults() {
     radialBlur.pipeline = "RadialBlur";
     radialBlur.secondaryInputResource = kPostProcessOutputResource;
     radialBlur.tertiaryInputResource = kPostProcessOutputResource;
-    radialBlur.enabled = true;
+    radialBlur.enabled = false;
     radialBlur.intensity = 1.0f;
     radialBlur.resolutionScale = 1.0f;
     radialBlur.parameters.radialCenterX = 0.5f;
@@ -311,6 +311,29 @@ void PostProcessStack::ResetToVfxDefaults() {
     vignette.parameters.vignetteSoftness = 0.35f;
     vignette.parameters.vignettePower = 1.0f;
     passes_.push_back(vignette);
+
+    PostProcessPass dissolvePreview{};
+    dissolvePreview.name = "DissolvePreviewPlane";
+    dissolvePreview.inputResource = kPostProcessOutputResource;
+    dissolvePreview.outputResource = kPostProcessSwapOutputResource;
+    dissolvePreview.pipeline = "DissolvePreview";
+    dissolvePreview.secondaryInputResource = kPostProcessOutputResource;
+    dissolvePreview.tertiaryInputResource = kPostProcessOutputResource;
+    dissolvePreview.enabled = true;
+    dissolvePreview.intensity = 1.0f;
+    dissolvePreview.resolutionScale = 1.0f;
+    dissolvePreview.parameters.dissolvePreviewThreshold = 0.5f;
+    dissolvePreview.parameters.dissolvePreviewEdgeWidth = 0.04f;
+    dissolvePreview.parameters.dissolvePreviewNoiseScale = 8.0f;
+    dissolvePreview.parameters.dissolvePreviewFillR = 0.0f;
+    dissolvePreview.parameters.dissolvePreviewFillG = 1.0f;
+    dissolvePreview.parameters.dissolvePreviewFillB = 0.0f;
+    dissolvePreview.parameters.dissolvePreviewEdgeR = 1.0f;
+    dissolvePreview.parameters.dissolvePreviewEdgeG = 0.35f;
+    dissolvePreview.parameters.dissolvePreviewEdgeB = 0.2f;
+    dissolvePreview.parameters.dissolvePreviewPlaneScaleX = 0.7f;
+    dissolvePreview.parameters.dissolvePreviewPlaneScaleY = 0.55f;
+    passes_.push_back(dissolvePreview);
 }
 
 void PostProcessStack::SetEnabled(const std::string& name, bool enabled) {

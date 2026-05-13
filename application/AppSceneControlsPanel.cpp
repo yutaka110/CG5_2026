@@ -5,6 +5,8 @@
 
 #include "../../externals/imgui/imgui.h"
 
+#include <string>
+
 void DrawSceneLightingControlsPanel(
     AppRuntimeState& runtimeState) {
     ImGui::ColorEdit3("Light Color",
@@ -100,7 +102,23 @@ void DrawVfxRuntimeControlsPanel(
     if (ImGui::SliderFloat("Effect Runtime Speed", &runtimeSpeed, 0.0f, 4.0f)) {
         effectRuntime.SetSpeedMultiplier(runtimeSpeed);
     }
+    ImGui::Checkbox("Enable VFX Spawning", &runtimeState.vfx.enableEffectSpawning);
     ImGui::Checkbox("Auto Play VFX Demo", &runtimeState.vfx.autoPlayVfxDemo);
+    int maxActiveEffects = static_cast<int>(runtimeState.vfx.maxActiveEffectInstances);
+    if (ImGui::SliderInt("Max Active Effects", &maxActiveEffects, 0, 32)) {
+        runtimeState.vfx.maxActiveEffectInstances = static_cast<uint32_t>(maxActiveEffects);
+    }
+    const uint32_t activeEffects = static_cast<uint32_t>(effectRuntime.Instances().size());
+    const uint32_t maxActive = runtimeState.vfx.maxActiveEffectInstances;
+    const bool canSpawnEffect =
+        runtimeState.vfx.enableEffectSpawning &&
+        (maxActive == 0 || activeEffects < maxActive);
+    const std::string maxActiveLabel =
+        maxActive == 0 ? "unlimited" : std::to_string(maxActive);
+    ImGui::Text(
+        "activeEffects=%u max=%s",
+        activeEffects,
+        maxActiveLabel.c_str());
     ImGui::Checkbox("Trail Mesh Stream", &runtimeState.vfx.enableTrailMeshStream);
     ImGui::Checkbox("Trail Mesh Stream Safety Fallback", &runtimeState.vfx.enableTrailMeshStreamAutoFallback);
     if (ImGui::Checkbox(
@@ -117,6 +135,7 @@ void DrawVfxRuntimeControlsPanel(
     static float radialBlurEventCenter[2] = {0.5f, 0.5f};
     static float radialBlurEventIntensity = 1.0f;
     static float radialBlurEventDuration = 0.35f;
+    static float previewEffectLifetime = 30.0f;
     ImGui::Separator();
     ImGui::TextUnformatted("Radial Blur Event");
     ImGui::SliderFloat2("Event Center", radialBlurEventCenter, 0.0f, 1.0f);
@@ -135,6 +154,7 @@ void DrawVfxRuntimeControlsPanel(
             radialBlurEventIntensity,
             radialBlurEventDuration);
     }
+    ImGui::BeginDisabled(!canSpawnEffect);
     if (ImGui::Button("Play warp_core")) {
         effectRuntime.PlayEffectWithParams(
             "warp_core",
@@ -147,6 +167,15 @@ void DrawVfxRuntimeControlsPanel(
                 radialBlurEventIntensity,
                 radialBlurEventDuration);
         }
+    }
+    ImGui::SliderFloat("Preview Effect Lifetime", &previewEffectLifetime, 3.0f, 60.0f, "%.1f sec");
+    if (ImGui::Button("Play warp_core preview")) {
+        const uint32_t instanceId = effectRuntime.PlayEffectWithParams(
+            "warp_core",
+            runtimeState.emitter.transform.translate,
+            {1.0f, 0.75f, 0.35f, 1.0f},
+            {1.0f, 1.0f, 1.0f});
+        effectRuntime.SetInstanceLifetimeOverride(instanceId, previewEffectLifetime);
     }
     if (ImGui::Button("Play authoring_metadata_demo")) {
         effectRuntime.PlayEffectWithParams(
@@ -169,6 +198,7 @@ void DrawVfxRuntimeControlsPanel(
             {1.0f, 0.45f, 0.25f, 1.0f},
             {1.0f, 1.0f, 1.0f});
     }
+    ImGui::EndDisabled();
     if (ImGui::Button("Clear Effects")) {
         effectRuntime.ClearInstances();
     }

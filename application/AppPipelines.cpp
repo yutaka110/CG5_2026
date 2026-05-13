@@ -144,6 +144,7 @@ bool AppPipelines::HotReloadIfNeeded(ID3D12Device* device) {
         L"resources/PrewittOutline.PS.hlsl",
         L"resources/Grayscale.PS.hlsl",
         L"resources/Vignette.PS.hlsl",
+        L"resources/DissolvePreview.PS.hlsl",
         L"resources/DebugDepthPreview.PS.hlsl",
         L"resources/DebugEmissivePreview.PS.hlsl",
     };
@@ -347,7 +348,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     particleRootParams[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
     particleRootParams[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     particleRootParams[4].Constants.ShaderRegister = 0;
-    particleRootParams[4].Constants.Num32BitValues = 4;
+    particleRootParams[4].Constants.Num32BitValues = 16;
 
     D3D12_ROOT_SIGNATURE_DESC particleRsDesc{};
     particleRsDesc.NumParameters = _countof(particleRootParams);
@@ -674,6 +675,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     prewittOutlinePs_ = Compile_(L"resources/PrewittOutline.PS.hlsl", L"ps_6_0");
     grayscalePs_ = Compile_(L"resources/Grayscale.PS.hlsl", L"ps_6_0");
     vignettePs_ = Compile_(L"resources/Vignette.PS.hlsl", L"ps_6_0");
+    dissolvePreviewPs_ = Compile_(L"resources/DissolvePreview.PS.hlsl", L"ps_6_0");
     debugDepthPreviewPs_ = Compile_(L"resources/DebugDepthPreview.PS.hlsl", L"ps_6_0");
     debugEmissivePreviewPs_ = Compile_(L"resources/DebugEmissivePreview.PS.hlsl", L"ps_6_0");
 
@@ -684,6 +686,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         !boxBlurHorizontalPs_ || !boxBlurVerticalPs_ || !gaussianBlurHorizontalPs_ || !gaussianBlurVerticalPs_ ||
         !distortionCompositePs_ ||
         !toneMappingPs_ || !glowCompositePs_ || !radialBlurPs_ || !prewittOutlinePs_ || !grayscalePs_ || !vignettePs_ ||
+        !dissolvePreviewPs_ ||
         !debugDepthPreviewPs_ || !debugEmissivePreviewPs_) {
         OutputDebugStringA("[AppPipelines] Shader compilation failed.\n");
         return false;
@@ -967,6 +970,13 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
 
     {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
+        d.PS = { dissolvePreviewPs_->GetBufferPointer(), dissolvePreviewPs_->GetBufferSize() };
+        hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&dissolvePreviewPso_));
+        if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(DissolvePreview)", hr);
+    }
+
+    {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
         d.PS = { debugDepthPreviewPs_->GetBufferPointer(), debugDepthPreviewPs_->GetBufferSize() };
         hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&debugDepthPreviewPso_));
         if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(DebugDepthPreview)", hr);
@@ -1205,6 +1215,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         L"resources/PrewittOutline.PS.hlsl",
         L"resources/Grayscale.PS.hlsl",
         L"resources/Vignette.PS.hlsl",
+        L"resources/DissolvePreview.PS.hlsl",
         L"resources/DebugDepthPreview.PS.hlsl",
         L"resources/DebugEmissivePreview.PS.hlsl",
     };

@@ -142,6 +142,14 @@ void DrawPostProcessPanel(
             ImGui::SliderFloat("Radius", &pass.parameters.vignetteRadius, 0.0f, 1.5f);
             ImGui::SliderFloat("Softness", &pass.parameters.vignetteSoftness, 0.01f, 1.0f);
             ImGui::SliderFloat("Power", &pass.parameters.vignettePower, 0.1f, 4.0f);
+        } else if (pass.pipeline == "DissolvePreview") {
+            ImGui::SliderFloat("Threshold", &pass.parameters.dissolvePreviewThreshold, 0.0f, 1.0f);
+            ImGui::SliderFloat("Edge Width", &pass.parameters.dissolvePreviewEdgeWidth, 0.001f, 0.25f);
+            ImGui::SliderFloat("Noise Scale", &pass.parameters.dissolvePreviewNoiseScale, 1.0f, 32.0f);
+            ImGui::ColorEdit3("Fill Color", &pass.parameters.dissolvePreviewFillR);
+            ImGui::ColorEdit3("Edge Color", &pass.parameters.dissolvePreviewEdgeR);
+            ImGui::SliderFloat("Plane Width", &pass.parameters.dissolvePreviewPlaneScaleX, 0.1f, 1.0f);
+            ImGui::SliderFloat("Plane Height", &pass.parameters.dissolvePreviewPlaneScaleY, 0.1f, 1.0f);
         }
         ImGui::Text("  %s -> %s pipeline=%s scale=%.2f",
             pass.inputResource.c_str(),

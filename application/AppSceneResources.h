@@ -76,10 +76,13 @@ public:
     // Texture
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
     Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2;
+    Microsoft::WRL::ComPtr<ID3D12Resource> streakNoiseTextureResource;
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU{};
     D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2{};
+    D3D12_GPU_DESCRIPTOR_HANDLE streakNoiseSrvHandleGPU{};
     D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU{};
     D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2{};
+    D3D12_CPU_DESCRIPTOR_HANDLE streakNoiseSrvHandleCPU{};
 
     // Sphere
     SphereMeshData sphere{};

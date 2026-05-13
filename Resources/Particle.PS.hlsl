@@ -8,6 +8,17 @@ cbuffer VfxDrawCB : register(b0)
     float gDistortionDepthAttenuation;
     float gParticleEdgeSoftness;
     float gTrailTailFade;
+    float gDissolveThreshold;
+    float gDissolveEdgeWidth;
+    float gDissolveEdgeColorR;
+    float gDissolveEdgeColorG;
+    float gDissolveEdgeColorB;
+    float gDissolveEnabled;
+    float gDissolvePreviewFillEnabled;
+    float gDissolvePreviewFillColorR;
+    float gDissolvePreviewFillColorG;
+    float gDissolvePreviewFillColorB;
+    float gDissolvePadding0;
 };
 
 struct PSIn
@@ -42,7 +53,29 @@ float ComputeEdgeFade(float2 uv)
 float4 main(PSIn input) : SV_TARGET
 {
     float4 tex = gParticleTex.Sample(gSampler, input.texcoord);
-    float4 outc = tex * input.color;
+    float dissolveEdge = 0.0f;
+    bool dissolvePreviewFill = false;
+    if (gDissolveEnabled > 0.5f) {
+        float mask = tex.r;
+        float threshold = saturate(gDissolveThreshold);
+        float edgeWidth = max(gDissolveEdgeWidth, 0.0001f);
+        if (mask < threshold) {
+            if (gDissolvePreviewFillEnabled > 0.5f) {
+                tex.rgb = float3(
+                    gDissolvePreviewFillColorR,
+                    gDissolvePreviewFillColorG,
+                    gDissolvePreviewFillColorB);
+                tex.a = 1.0f;
+                dissolvePreviewFill = true;
+            } else {
+                discard;
+            }
+        }
+        dissolveEdge = 1.0f - smoothstep(threshold, threshold + edgeWidth, mask);
+    }
+
+    float4 outc = dissolvePreviewFill ? tex : tex * input.color;
+    outc.rgb += dissolveEdge * float3(gDissolveEdgeColorR, gDissolveEdgeColorG, gDissolveEdgeColorB);
     outc.a *= ComputeSoftParticleFade(input.position);
     outc.a *= ComputeEdgeFade(input.texcoord);
     outc.rgb *= outc.a;

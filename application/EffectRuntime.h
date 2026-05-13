@@ -29,6 +29,7 @@ public:
         const Vector3& scale);
     void StopEffect(uint32_t id);
     void RestartInstance(uint32_t id);
+    void SetInstanceLifetimeOverride(uint32_t id, float lifetimeSeconds);
     void ClearInstances();
 
     void Update(float deltaTime);
