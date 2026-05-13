@@ -5,10 +5,17 @@
 namespace {
 constexpr const char* kPostProcessOutputResource = "PostProcessOutput";
 constexpr const char* kPostProcessSwapOutputResource = "PostProcessSwapOutput";
+constexpr const char* kPostProcessPreviousInputResource = "PostProcessPreviousInput";
 
-std::string ResolvePostProcessInputResource(std::string_view resource, std::string_view currentOutput) {
+std::string ResolvePostProcessInputResource(
+    std::string_view resource,
+    std::string_view currentOutput,
+    std::string_view previousInput) {
     if (resource == kPostProcessOutputResource) {
         return std::string(currentOutput);
+    }
+    if (resource == kPostProcessPreviousInputResource) {
+        return std::string(previousInput);
     }
     return std::string(resource);
 }
@@ -184,6 +191,32 @@ void PostProcessStack::ResetToVfxDefaults() {
     glowComposite.parameters.glowTintB = 1.2f;
     passes_.push_back(glowComposite);
 
+    PostProcessPass boxBlurHorizontal{};
+    boxBlurHorizontal.name = "BoxBlurHorizontal";
+    boxBlurHorizontal.inputResource = kPostProcessOutputResource;
+    boxBlurHorizontal.outputResource = kPostProcessSwapOutputResource;
+    boxBlurHorizontal.pipeline = "BoxBlurHorizontal";
+    boxBlurHorizontal.secondaryInputResource = kPostProcessOutputResource;
+    boxBlurHorizontal.tertiaryInputResource = kPostProcessOutputResource;
+    boxBlurHorizontal.enabled = true;
+    boxBlurHorizontal.intensity = 1.0f;
+    boxBlurHorizontal.resolutionScale = 1.0f;
+    boxBlurHorizontal.parameters.boxBlurKernelRadius = 1.0f;
+    passes_.push_back(boxBlurHorizontal);
+
+    PostProcessPass boxBlurVertical{};
+    boxBlurVertical.name = "BoxBlurVertical";
+    boxBlurVertical.inputResource = kPostProcessOutputResource;
+    boxBlurVertical.outputResource = "PostBlurComposite";
+    boxBlurVertical.pipeline = "BoxBlurVertical";
+    boxBlurVertical.secondaryInputResource = kPostProcessPreviousInputResource;
+    boxBlurVertical.tertiaryInputResource = kPostProcessPreviousInputResource;
+    boxBlurVertical.enabled = true;
+    boxBlurVertical.intensity = 1.0f;
+    boxBlurVertical.resolutionScale = 1.0f;
+    boxBlurVertical.parameters.boxBlurKernelRadius = 1.0f;
+    passes_.push_back(boxBlurVertical);
+
     PostProcessPass grayscale{};
     grayscale.name = "Grayscale";
     grayscale.inputResource = kPostProcessOutputResource;
@@ -259,6 +292,7 @@ PostProcessExecutionPlan PostProcessStack::BuildExecutionPlan() const {
         "SceneColor",
         "VfxAccumulation",
     };
+    std::string previousInputResource = plan.finalOutputResource;
 
     for (const PostProcessPass& pass : passes_) {
         if (!pass.enabled) {
@@ -266,12 +300,19 @@ PostProcessExecutionPlan PostProcessStack::BuildExecutionPlan() const {
         }
 
         PostProcessPass resolvedPass = pass;
-        resolvedPass.inputResource = ResolvePostProcessInputResource(pass.inputResource, plan.finalOutputResource);
+        resolvedPass.inputResource =
+            ResolvePostProcessInputResource(pass.inputResource, plan.finalOutputResource, previousInputResource);
         resolvedPass.outputResource = ResolvePostProcessOutputResource(pass.outputResource, plan.finalOutputResource);
         resolvedPass.secondaryInputResource =
-            ResolvePostProcessInputResource(pass.secondaryInputResource, plan.finalOutputResource);
+            ResolvePostProcessInputResource(
+                pass.secondaryInputResource,
+                plan.finalOutputResource,
+                previousInputResource);
         resolvedPass.tertiaryInputResource =
-            ResolvePostProcessInputResource(pass.tertiaryInputResource, plan.finalOutputResource);
+            ResolvePostProcessInputResource(
+                pass.tertiaryInputResource,
+                plan.finalOutputResource,
+                previousInputResource);
 
         const bool hasPrimaryInput = availableResources.contains(resolvedPass.inputResource);
         const bool hasSecondaryInput = availableResources.contains(resolvedPass.secondaryInputResource);
@@ -282,6 +323,7 @@ PostProcessExecutionPlan PostProcessStack::BuildExecutionPlan() const {
 
         PostProcessExecutionPass executionPass{};
         executionPass.pass = std::move(resolvedPass);
+        previousInputResource = executionPass.pass.inputResource;
         plan.finalOutputResource = executionPass.pass.outputResource;
         availableResources.insert(executionPass.pass.outputResource);
         plan.passes.push_back(std::move(executionPass));

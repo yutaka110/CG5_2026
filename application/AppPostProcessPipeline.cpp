@@ -25,6 +25,12 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     if (name == "BlurVertical") {
         return pipelines.GetBlurVerticalPSO();
     }
+    if (name == "BoxBlurHorizontal") {
+        return pipelines.GetBoxBlurHorizontalPSO();
+    }
+    if (name == "BoxBlurVertical") {
+        return pipelines.GetBoxBlurVerticalPSO();
+    }
     if (name == "DistortionComposite") {
         return pipelines.GetDistortionCompositePSO();
     }
@@ -69,6 +75,10 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[8]) {
     }
     if (postPass.pipeline == "BlurHorizontal" || postPass.pipeline == "BlurVertical") {
         passParams[1] = postPass.parameters.blurRadius;
+        return;
+    }
+    if (postPass.pipeline == "BoxBlurHorizontal" || postPass.pipeline == "BoxBlurVertical") {
+        passParams[1] = postPass.parameters.boxBlurKernelRadius;
         return;
     }
     if (postPass.pipeline == "DistortionComposite") {

@@ -6,7 +6,50 @@
 
 void DrawPostProcessPanel(
     PostProcessStack& postProcessStack) {
-    for (PostProcessPass& pass : postProcessStack.MutablePasses()) {
+    std::vector<PostProcessPass>& passes = postProcessStack.MutablePasses();
+    for (PostProcessPass& pass : passes) {
+        if (pass.pipeline == "BoxBlurVertical") {
+            continue;
+        }
+        if (pass.pipeline == "BoxBlurHorizontal") {
+            PostProcessPass* verticalPass = nullptr;
+            for (PostProcessPass& candidate : passes) {
+                if (candidate.pipeline == "BoxBlurVertical") {
+                    verticalPass = &candidate;
+                    break;
+                }
+            }
+
+            ImGui::PushID(pass.name.c_str());
+            bool enabled = pass.enabled && (verticalPass == nullptr || verticalPass->enabled);
+            if (ImGui::Checkbox("BoxBlur", &enabled)) {
+                pass.enabled = enabled;
+                if (verticalPass != nullptr) {
+                    verticalPass->enabled = enabled;
+                }
+            }
+            ImGui::SameLine();
+            float intensity = pass.intensity;
+            if (ImGui::SliderFloat("Intensity", &intensity, 0.0f, 4.0f)) {
+                pass.intensity = intensity;
+                if (verticalPass != nullptr) {
+                    verticalPass->intensity = intensity;
+                }
+            }
+            const char* kernels[] = { "3x3", "5x5" };
+            int kernel = pass.parameters.boxBlurKernelRadius >= 1.5f ? 1 : 0;
+            if (ImGui::Combo("Kernel", &kernel, kernels, _countof(kernels))) {
+                const float kernelRadius = kernel == 0 ? 1.0f : 2.0f;
+                pass.parameters.boxBlurKernelRadius = kernelRadius;
+                if (verticalPass != nullptr) {
+                    verticalPass->parameters.boxBlurKernelRadius = kernelRadius;
+                }
+            }
+            ImGui::Text("  separable box blur: horizontal -> vertical scale=%.2f", pass.resolutionScale);
+            ImGui::PopID();
+            continue;
+        }
+
         ImGui::PushID(pass.name.c_str());
         ImGui::Checkbox(pass.name.c_str(), &pass.enabled);
         ImGui::SameLine();
