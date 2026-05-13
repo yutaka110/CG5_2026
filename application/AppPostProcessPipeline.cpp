@@ -48,6 +48,9 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     if (name == "GlowComposite") {
         return pipelines.GetGlowCompositePSO();
     }
+    if (name == "RadialBlur") {
+        return pipelines.GetRadialBlurPSO();
+    }
     if (name == "PrewittOutline") {
         return pipelines.GetPrewittOutlinePSO();
     }
@@ -114,6 +117,13 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[12]) {
         passParams[2] = postPass.parameters.glowTintR;
         passParams[3] = postPass.parameters.glowTintG;
         passParams[4] = postPass.parameters.glowTintB;
+        return;
+    }
+    if (postPass.pipeline == "RadialBlur") {
+        passParams[1] = postPass.parameters.radialCenterX;
+        passParams[2] = postPass.parameters.radialCenterY;
+        passParams[3] = postPass.parameters.radialBlurWidth;
+        passParams[4] = postPass.parameters.radialSampleCount;
         return;
     }
     if (postPass.pipeline == "PrewittOutline") {

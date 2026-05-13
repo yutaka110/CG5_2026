@@ -216,6 +216,16 @@ void AppRunLoop::RenderFrame() {
                 emitterState.frequency = runtimeState_.emitter.frequency;
                 emitterState.frequencyTime = runtimeState_.emitter.frequencyTime;
                 particleSystem_.Emit(emitterState);
+            },
+            [&](float centerX, float centerY, float intensity, float durationSeconds) {
+                vfxEngine_.TriggerRadialBlurEvent(centerX, centerY, intensity, durationSeconds);
+            },
+            [&](const Vector3& worldPosition, float intensity, float durationSeconds) {
+                vfxEngine_.TriggerRadialBlurEventFromWorld(
+                    worldPosition,
+                    frameState_.viewProjectionMatrix,
+                    intensity,
+                    durationSeconds);
             }});
     imguiLayer_.EndFrame();
 

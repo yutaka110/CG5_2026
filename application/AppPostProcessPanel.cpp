@@ -119,6 +119,11 @@ void DrawPostProcessPanel(
         } else if (pass.pipeline == "GlowComposite") {
             ImGui::SliderFloat("Glow Weight", &pass.parameters.glowWeight, 0.0f, 4.0f);
             ImGui::ColorEdit3("Glow Tint", &pass.parameters.glowTintR);
+        } else if (pass.pipeline == "RadialBlur") {
+            ImGui::SliderFloat("Center X", &pass.parameters.radialCenterX, 0.0f, 1.0f);
+            ImGui::SliderFloat("Center Y", &pass.parameters.radialCenterY, 0.0f, 1.0f);
+            ImGui::SliderFloat("Blur Width", &pass.parameters.radialBlurWidth, 0.0f, 0.5f);
+            ImGui::SliderFloat("Samples", &pass.parameters.radialSampleCount, 2.0f, 32.0f, "%.0f");
         } else if (pass.pipeline == "PrewittOutline") {
             ImGui::SliderFloat("Threshold", &pass.parameters.outlineThreshold, 0.001f, 0.5f);
             ImGui::SliderFloat("Thickness", &pass.parameters.outlineThickness, 1.0f, 4.0f);

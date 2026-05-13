@@ -35,6 +35,10 @@ struct PostProcessPass {
         float outlineDepthWeight = 8.0f;
         float outlineNormalWeight = 0.75f;
         float outlineObjectWeight = 1.0f;
+        float radialCenterX = 0.5f;
+        float radialCenterY = 0.5f;
+        float radialBlurWidth = 0.08f;
+        float radialSampleCount = 12.0f;
     };
 
     std::string name;
@@ -63,6 +67,8 @@ public:
     void ResetToVfxDefaults();
     void SetEnabled(const std::string& name, bool enabled);
     void SetIntensity(const std::string& name, float intensity);
+    void TriggerRadialBlurEvent(float centerX, float centerY, float intensity, float durationSeconds);
+    void UpdateRuntimeEffects(float deltaTime);
     bool IsEnabled(const std::string& name) const;
     float Intensity(const std::string& name) const;
     std::string FinalOutputResource() const;
@@ -71,5 +77,23 @@ public:
     std::vector<PostProcessPass>& MutablePasses() { return passes_; }
 
 private:
+    PostProcessPass* FindPass(std::string_view name);
+    const PostProcessPass* FindPass(std::string_view name) const;
+    void RestoreRadialBlurManualState();
+
+    struct RuntimeRadialBlurState {
+        bool active = false;
+        float centerX = 0.5f;
+        float centerY = 0.5f;
+        float intensity = 1.0f;
+        float durationSeconds = 0.35f;
+        float elapsedSeconds = 0.0f;
+        bool restoreEnabled = false;
+        float restoreIntensity = 1.0f;
+        float restoreCenterX = 0.5f;
+        float restoreCenterY = 0.5f;
+    };
+
     std::vector<PostProcessPass> passes_;
+    RuntimeRadialBlurState runtimeRadialBlur_{};
 };

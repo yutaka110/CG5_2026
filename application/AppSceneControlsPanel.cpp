@@ -114,12 +114,39 @@ void DrawVfxRuntimeControlsPanel(
         trailMeshStreamStartupTelemetryFrames);
     ImGui::SliderFloat("Demo Spawn Interval", &runtimeState.vfx.autoPlayVfxInterval, 0.1f, 2.0f, "%.2f");
     ImGui::SliderFloat("Demo Spawn Radius", &runtimeState.vfx.autoPlayVfxRadius, 0.0f, 8.0f, "%.2f");
+    static float radialBlurEventCenter[2] = {0.5f, 0.5f};
+    static float radialBlurEventIntensity = 1.0f;
+    static float radialBlurEventDuration = 0.35f;
+    ImGui::Separator();
+    ImGui::TextUnformatted("Radial Blur Event");
+    ImGui::SliderFloat2("Event Center", radialBlurEventCenter, 0.0f, 1.0f);
+    ImGui::SliderFloat("Event Intensity", &radialBlurEventIntensity, 0.0f, 4.0f);
+    ImGui::SliderFloat("Event Duration", &radialBlurEventDuration, 0.05f, 2.0f);
+    if (ImGui::Button("Trigger Radial Blur Event") && input.onRadialBlurEvent) {
+        input.onRadialBlurEvent(
+            radialBlurEventCenter[0],
+            radialBlurEventCenter[1],
+            radialBlurEventIntensity,
+            radialBlurEventDuration);
+    }
+    if (ImGui::Button("Trigger Radial Blur From Emitter") && input.onRadialBlurWorldEvent) {
+        input.onRadialBlurWorldEvent(
+            runtimeState.emitter.transform.translate,
+            radialBlurEventIntensity,
+            radialBlurEventDuration);
+    }
     if (ImGui::Button("Play warp_core")) {
         effectRuntime.PlayEffectWithParams(
             "warp_core",
             runtimeState.emitter.transform.translate,
             {1.0f, 0.75f, 0.35f, 1.0f},
             {1.0f, 1.0f, 1.0f});
+        if (input.onRadialBlurWorldEvent) {
+            input.onRadialBlurWorldEvent(
+                runtimeState.emitter.transform.translate,
+                radialBlurEventIntensity,
+                radialBlurEventDuration);
+        }
     }
     if (ImGui::Button("Play authoring_metadata_demo")) {
         effectRuntime.PlayEffectWithParams(

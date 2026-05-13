@@ -1,5 +1,6 @@
 #include "PostProcessStack.h"
 
+#include <algorithm>
 #include <utility>
 
 namespace {
@@ -30,6 +31,7 @@ std::string ResolvePostProcessOutputResource(std::string_view resource, std::str
 
 void PostProcessStack::ResetToVfxDefaults() {
     passes_.clear();
+    runtimeRadialBlur_ = {};
     PostProcessPass bloomExtract{};
     bloomExtract.name = "BloomExtract";
     bloomExtract.inputResource = "VfxAccumulation";
@@ -191,6 +193,22 @@ void PostProcessStack::ResetToVfxDefaults() {
     glowComposite.parameters.glowTintB = 1.2f;
     passes_.push_back(glowComposite);
 
+    PostProcessPass radialBlur{};
+    radialBlur.name = "RadialBlur";
+    radialBlur.inputResource = kPostProcessOutputResource;
+    radialBlur.outputResource = kPostProcessSwapOutputResource;
+    radialBlur.pipeline = "RadialBlur";
+    radialBlur.secondaryInputResource = kPostProcessOutputResource;
+    radialBlur.tertiaryInputResource = kPostProcessOutputResource;
+    radialBlur.enabled = true;
+    radialBlur.intensity = 1.0f;
+    radialBlur.resolutionScale = 1.0f;
+    radialBlur.parameters.radialCenterX = 0.5f;
+    radialBlur.parameters.radialCenterY = 0.5f;
+    radialBlur.parameters.radialBlurWidth = 0.08f;
+    radialBlur.parameters.radialSampleCount = 12.0f;
+    passes_.push_back(radialBlur);
+
     PostProcessPass boxBlurHorizontal{};
     boxBlurHorizontal.name = "BoxBlurHorizontal";
     boxBlurHorizontal.inputResource = kPostProcessOutputResource;
@@ -252,7 +270,7 @@ void PostProcessStack::ResetToVfxDefaults() {
     prewittOutline.pipeline = "PrewittOutline";
     prewittOutline.secondaryInputResource = kPostProcessOutputResource;
     prewittOutline.tertiaryInputResource = kPostProcessOutputResource;
-    prewittOutline.enabled = true;
+    prewittOutline.enabled = false;
     prewittOutline.intensity = 1.0f;
     prewittOutline.resolutionScale = 1.0f;
     prewittOutline.parameters.outlineThreshold = 0.08f;
@@ -311,6 +329,65 @@ void PostProcessStack::SetIntensity(const std::string& name, float intensity) {
             return;
         }
     }
+}
+
+void PostProcessStack::TriggerRadialBlurEvent(
+    float centerX,
+    float centerY,
+    float intensity,
+    float durationSeconds) {
+    PostProcessPass* radialBlur = FindPass("RadialBlur");
+    if (radialBlur == nullptr) {
+        return;
+    }
+
+    if (!runtimeRadialBlur_.active) {
+        runtimeRadialBlur_.restoreEnabled = radialBlur->enabled;
+        runtimeRadialBlur_.restoreIntensity = radialBlur->intensity;
+        runtimeRadialBlur_.restoreCenterX = radialBlur->parameters.radialCenterX;
+        runtimeRadialBlur_.restoreCenterY = radialBlur->parameters.radialCenterY;
+    }
+
+    runtimeRadialBlur_.active = true;
+    runtimeRadialBlur_.centerX = std::clamp(centerX, 0.0f, 1.0f);
+    runtimeRadialBlur_.centerY = std::clamp(centerY, 0.0f, 1.0f);
+    runtimeRadialBlur_.intensity = (std::max)(0.0f, intensity);
+    runtimeRadialBlur_.durationSeconds = (std::max)(0.001f, durationSeconds);
+    runtimeRadialBlur_.elapsedSeconds = 0.0f;
+
+    radialBlur->enabled = true;
+    radialBlur->intensity = runtimeRadialBlur_.intensity;
+    radialBlur->parameters.radialCenterX = runtimeRadialBlur_.centerX;
+    radialBlur->parameters.radialCenterY = runtimeRadialBlur_.centerY;
+}
+
+void PostProcessStack::UpdateRuntimeEffects(float deltaTime) {
+    if (!runtimeRadialBlur_.active) {
+        return;
+    }
+
+    PostProcessPass* radialBlur = FindPass("RadialBlur");
+    if (radialBlur == nullptr) {
+        runtimeRadialBlur_.active = false;
+        return;
+    }
+
+    runtimeRadialBlur_.elapsedSeconds += (std::max)(0.0f, deltaTime);
+    const float t = std::clamp(
+        runtimeRadialBlur_.elapsedSeconds / runtimeRadialBlur_.durationSeconds,
+        0.0f,
+        1.0f);
+    if (t >= 1.0f) {
+        RestoreRadialBlurManualState();
+        runtimeRadialBlur_.active = false;
+        return;
+    }
+
+    const float fade = 1.0f - t;
+    radialBlur->enabled = true;
+    radialBlur->intensity = runtimeRadialBlur_.intensity * fade;
+    radialBlur->parameters.radialCenterX = runtimeRadialBlur_.centerX;
+    radialBlur->parameters.radialCenterY = runtimeRadialBlur_.centerY;
 }
 
 bool PostProcessStack::IsEnabled(const std::string& name) const {
@@ -379,4 +456,34 @@ PostProcessExecutionPlan PostProcessStack::BuildExecutionPlan() const {
     }
 
     return plan;
+}
+
+PostProcessPass* PostProcessStack::FindPass(std::string_view name) {
+    for (PostProcessPass& pass : passes_) {
+        if (pass.name == name) {
+            return &pass;
+        }
+    }
+    return nullptr;
+}
+
+const PostProcessPass* PostProcessStack::FindPass(std::string_view name) const {
+    for (const PostProcessPass& pass : passes_) {
+        if (pass.name == name) {
+            return &pass;
+        }
+    }
+    return nullptr;
+}
+
+void PostProcessStack::RestoreRadialBlurManualState() {
+    PostProcessPass* radialBlur = FindPass("RadialBlur");
+    if (radialBlur == nullptr) {
+        return;
+    }
+
+    radialBlur->enabled = runtimeRadialBlur_.restoreEnabled;
+    radialBlur->intensity = runtimeRadialBlur_.restoreIntensity;
+    radialBlur->parameters.radialCenterX = runtimeRadialBlur_.restoreCenterX;
+    radialBlur->parameters.radialCenterY = runtimeRadialBlur_.restoreCenterY;
 }
