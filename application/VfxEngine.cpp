@@ -143,6 +143,39 @@ void PreserveLiveTuning(
     PreserveTrailLiveTuning(currentAsset, reloadedAsset);
     PreserveDistortionLiveTuning(currentAsset, reloadedAsset);
 }
+
+bool ProjectWorldToScreenUv(
+    const Vector3& worldPosition,
+    const Matrix4x4& viewProjection,
+    Vector2& outUv) {
+    const float clipX =
+        worldPosition.x * viewProjection.m[0][0] +
+        worldPosition.y * viewProjection.m[1][0] +
+        worldPosition.z * viewProjection.m[2][0] +
+        viewProjection.m[3][0];
+    const float clipY =
+        worldPosition.x * viewProjection.m[0][1] +
+        worldPosition.y * viewProjection.m[1][1] +
+        worldPosition.z * viewProjection.m[2][1] +
+        viewProjection.m[3][1];
+    const float clipW =
+        worldPosition.x * viewProjection.m[0][3] +
+        worldPosition.y * viewProjection.m[1][3] +
+        worldPosition.z * viewProjection.m[2][3] +
+        viewProjection.m[3][3];
+
+    if (clipW <= 0.0001f) {
+        return false;
+    }
+
+    const float ndcX = clipX / clipW;
+    const float ndcY = clipY / clipW;
+    outUv = {
+        std::clamp(ndcX * 0.5f + 0.5f, 0.0f, 1.0f),
+        std::clamp(0.5f - ndcY * 0.5f, 0.0f, 1.0f)
+    };
+    return true;
+}
 } // namespace
 
 VfxEngine::VfxEngine() {
@@ -234,7 +267,30 @@ void VfxEngine::Update(AppVfxRuntimeState& runtimeState, float deltaTime) {
     beamTime_ += deltaTime;
     beam_.SetTime(beamTime_);
     effectRuntime_.Update(deltaTime);
+    postProcessStack_.UpdateRuntimeEffects(deltaTime);
     ReloadChangedEffectAssets();
+}
+
+void VfxEngine::TriggerRadialBlurEvent(
+    float centerX,
+    float centerY,
+    float intensity,
+    float durationSeconds) {
+    postProcessStack_.TriggerRadialBlurEvent(centerX, centerY, intensity, durationSeconds);
+}
+
+bool VfxEngine::TriggerRadialBlurEventFromWorld(
+    const Vector3& worldPosition,
+    const Matrix4x4& viewProjection,
+    float intensity,
+    float durationSeconds) {
+    Vector2 centerUv{};
+    if (!ProjectWorldToScreenUv(worldPosition, viewProjection, centerUv)) {
+        return false;
+    }
+
+    TriggerRadialBlurEvent(centerUv.x, centerUv.y, intensity, durationSeconds);
+    return true;
 }
 
 void VfxEngine::ReloadChangedEffectAssets() {

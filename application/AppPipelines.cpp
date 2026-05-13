@@ -140,6 +140,7 @@ bool AppPipelines::HotReloadIfNeeded(ID3D12Device* device) {
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
+        L"resources/RadialBlur.PS.hlsl",
         L"resources/PrewittOutline.PS.hlsl",
         L"resources/Grayscale.PS.hlsl",
         L"resources/Vignette.PS.hlsl",
@@ -669,6 +670,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     distortionCompositePs_ = Compile_(L"resources/DistortionComposite.PS.hlsl", L"ps_6_0");
     toneMappingPs_ = Compile_(L"resources/ToneMapping.PS.hlsl", L"ps_6_0");
     glowCompositePs_ = Compile_(L"resources/GlowComposite.PS.hlsl", L"ps_6_0");
+    radialBlurPs_ = Compile_(L"resources/RadialBlur.PS.hlsl", L"ps_6_0");
     prewittOutlinePs_ = Compile_(L"resources/PrewittOutline.PS.hlsl", L"ps_6_0");
     grayscalePs_ = Compile_(L"resources/Grayscale.PS.hlsl", L"ps_6_0");
     vignettePs_ = Compile_(L"resources/Vignette.PS.hlsl", L"ps_6_0");
@@ -681,7 +683,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         !bloomDownsamplePs_ || !bloomUpsamplePs_ || !blurHorizontalPs_ || !blurVerticalPs_ ||
         !boxBlurHorizontalPs_ || !boxBlurVerticalPs_ || !gaussianBlurHorizontalPs_ || !gaussianBlurVerticalPs_ ||
         !distortionCompositePs_ ||
-        !toneMappingPs_ || !glowCompositePs_ || !prewittOutlinePs_ || !grayscalePs_ || !vignettePs_ ||
+        !toneMappingPs_ || !glowCompositePs_ || !radialBlurPs_ || !prewittOutlinePs_ || !grayscalePs_ || !vignettePs_ ||
         !debugDepthPreviewPs_ || !debugEmissivePreviewPs_) {
         OutputDebugStringA("[AppPipelines] Shader compilation failed.\n");
         return false;
@@ -933,6 +935,13 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         d.PS = { glowCompositePs_->GetBufferPointer(), glowCompositePs_->GetBufferSize() };
         hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&glowCompositePso_));
         if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(GlowComposite)", hr);
+    }
+
+    {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
+        d.PS = { radialBlurPs_->GetBufferPointer(), radialBlurPs_->GetBufferSize() };
+        hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&radialBlurPso_));
+        if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(RadialBlur)", hr);
     }
 
     {
@@ -1192,6 +1201,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
+        L"resources/RadialBlur.PS.hlsl",
         L"resources/PrewittOutline.PS.hlsl",
         L"resources/Grayscale.PS.hlsl",
         L"resources/Vignette.PS.hlsl",

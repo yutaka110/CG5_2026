@@ -9,6 +9,7 @@
 
 struct AppRuntimeState;
 struct FrameLoopState;
+struct Vector3;
 class AppGpuParticleSystem;
 class AppPipelines;
 class AppRenderResources;
@@ -45,6 +46,8 @@ struct AppImGuiFrameContext {
     D3D12_GPU_DESCRIPTOR_HANDLE vfxTextureHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE depthTextureHandle{};
     std::function<void()> onAddParticle;
+    std::function<void(float centerX, float centerY, float intensity, float durationSeconds)> onRadialBlurEvent;
+    std::function<void(const Vector3& worldPosition, float intensity, float durationSeconds)> onRadialBlurWorldEvent;
 };
 
 class AppImGuiLayer {

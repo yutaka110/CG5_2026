@@ -204,7 +204,9 @@ void AppImGuiLayer::BuildUi(const AppImGuiFrameContext& context) {
                 VfxRuntimeControlsPanelInput{
                     &runtimeState,
                     &effectRuntime,
-                    &trailMeshStreamStartupTelemetryFrames_});
+                    &trailMeshStreamStartupTelemetryFrames_,
+                    context.onRadialBlurEvent,
+                    context.onRadialBlurWorldEvent});
         }
 
         if (ImGui::CollapsingHeader("Effect Instances", ImGuiTreeNodeFlags_DefaultOpen)) {

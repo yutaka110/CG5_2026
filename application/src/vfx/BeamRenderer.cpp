@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "../../AppFrameGraphBuilder.h"
@@ -197,10 +198,18 @@ void BeamRenderer::RegisterDedicatedPasses(
     const vfx::VfxTypedResourceSet vfxResources = resources;
     const vfx::BeamVfxResourceSet& beam = vfxResources.beam;
     if (beam.routing.simulationPass[0] != '\0') {
+        std::vector<ge3::graphics::RenderPassResourceAccess> simulationAccesses =
+            vfx::SimulationAccesses(beam.simulation);
+        if (beam.simulation.indirectArgs[0] != '\0') {
+            simulationAccesses.push_back({
+                beam.simulation.indirectArgs,
+                ge3::graphics::RenderResourceAccessType::ReadIndirect
+            });
+        }
         ctx.renderGraph->AddPass({
             beam.routing.simulationPass,
             ge3::graphics::RenderPassLayer::Vfx,
-            vfx::SimulationAccesses(beam.simulation),
+            std::move(simulationAccesses),
             "",
             [this, ctx, vfxResources](ge3::graphics::RenderPassContext& passContext) {
                 Simulate(

@@ -53,6 +53,12 @@ public:
 
     void BeginFrame();
     void Update(AppVfxRuntimeState& runtimeState, float deltaTime);
+    void TriggerRadialBlurEvent(float centerX, float centerY, float intensity, float durationSeconds);
+    bool TriggerRadialBlurEventFromWorld(
+        const Vector3& worldPosition,
+        const Matrix4x4& viewProjection,
+        float intensity,
+        float durationSeconds);
     void RegisterDefaultTextures(const AppSceneResources& scene);
     void RegisterRenderPasses(
         const AppFrameGraphBuilder& frameGraphBuilder,
