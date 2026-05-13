@@ -133,6 +133,8 @@ bool AppPipelines::HotReloadIfNeeded(ID3D12Device* device) {
         L"resources/BloomUpsample.PS.hlsl",
         L"resources/BlurHorizontal.PS.hlsl",
         L"resources/BlurVertical.PS.hlsl",
+        L"resources/BoxBlurHorizontal.PS.hlsl",
+        L"resources/BoxBlurVertical.PS.hlsl",
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
@@ -657,6 +659,8 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     bloomUpsamplePs_ = Compile_(L"resources/BloomUpsample.PS.hlsl", L"ps_6_0");
     blurHorizontalPs_ = Compile_(L"resources/BlurHorizontal.PS.hlsl", L"ps_6_0");
     blurVerticalPs_ = Compile_(L"resources/BlurVertical.PS.hlsl", L"ps_6_0");
+    boxBlurHorizontalPs_ = Compile_(L"resources/BoxBlurHorizontal.PS.hlsl", L"ps_6_0");
+    boxBlurVerticalPs_ = Compile_(L"resources/BoxBlurVertical.PS.hlsl", L"ps_6_0");
     distortionCompositePs_ = Compile_(L"resources/DistortionComposite.PS.hlsl", L"ps_6_0");
     toneMappingPs_ = Compile_(L"resources/ToneMapping.PS.hlsl", L"ps_6_0");
     glowCompositePs_ = Compile_(L"resources/GlowComposite.PS.hlsl", L"ps_6_0");
@@ -668,7 +672,8 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     if (!vs_ || !ps_ || !spriteVs_ || !spritePs_ || !cs_ || !particleVs_ || !particlePs_ ||
         !trailMeshVs_ || !trailMeshStreamVs_ || !trailMeshPs_ || !distortionSpriteVs_ || !distortionSpritePs_ ||
         !gpuParticleCs_ || !trailMeshStreamCs_ || !trailMeshBuildCs_ || !compositeVs_ || !compositePs_ || !bloomExtractPs_ ||
-        !bloomDownsamplePs_ || !bloomUpsamplePs_ || !blurHorizontalPs_ || !blurVerticalPs_ || !distortionCompositePs_ ||
+        !bloomDownsamplePs_ || !bloomUpsamplePs_ || !blurHorizontalPs_ || !blurVerticalPs_ ||
+        !boxBlurHorizontalPs_ || !boxBlurVerticalPs_ || !distortionCompositePs_ ||
         !toneMappingPs_ || !glowCompositePs_ || !grayscalePs_ || !vignettePs_ || !debugDepthPreviewPs_ || !debugEmissivePreviewPs_) {
         OutputDebugStringA("[AppPipelines] Shader compilation failed.\n");
         return false;
@@ -869,6 +874,20 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         d.PS = { blurVerticalPs_->GetBufferPointer(), blurVerticalPs_->GetBufferSize() };
         hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&blurVerticalPso_));
         if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(BlurVertical)", hr);
+    }
+
+    {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
+        d.PS = { boxBlurHorizontalPs_->GetBufferPointer(), boxBlurHorizontalPs_->GetBufferSize() };
+        hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&boxBlurHorizontalPso_));
+        if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(BoxBlurHorizontal)", hr);
+    }
+
+    {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
+        d.PS = { boxBlurVerticalPs_->GetBufferPointer(), boxBlurVerticalPs_->GetBufferSize() };
+        hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&boxBlurVerticalPso_));
+        if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(BoxBlurVertical)", hr);
     }
 
     {
@@ -1133,6 +1152,8 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         L"resources/BloomUpsample.PS.hlsl",
         L"resources/BlurHorizontal.PS.hlsl",
         L"resources/BlurVertical.PS.hlsl",
+        L"resources/BoxBlurHorizontal.PS.hlsl",
+        L"resources/BoxBlurVertical.PS.hlsl",
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
