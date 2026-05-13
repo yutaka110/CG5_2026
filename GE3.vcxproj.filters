@@ -367,6 +367,7 @@
     <FxCompile Include="Resources\TrailMeshBuild.CS.hlsl" />
     <FxCompile Include="Resources\FullscreenComposite.VS.hlsl" />
     <FxCompile Include="Resources\FullscreenComposite.PS.hlsl" />
+    <FxCompile Include="Resources\Grayscale.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Matrix4x4.h">
