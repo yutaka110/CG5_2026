@@ -42,6 +42,8 @@ public:
     ID3D12PipelineState* GetBlurVerticalPSO() const { return blurVerticalPso_.Get(); }
     ID3D12PipelineState* GetBoxBlurHorizontalPSO() const { return boxBlurHorizontalPso_.Get(); }
     ID3D12PipelineState* GetBoxBlurVerticalPSO() const { return boxBlurVerticalPso_.Get(); }
+    ID3D12PipelineState* GetGaussianBlurHorizontalPSO() const { return gaussianBlurHorizontalPso_.Get(); }
+    ID3D12PipelineState* GetGaussianBlurVerticalPSO() const { return gaussianBlurVerticalPso_.Get(); }
     ID3D12PipelineState* GetDistortionCompositePSO() const { return distortionCompositePso_.Get(); }
     ID3D12PipelineState* GetToneMappingPSO() const { return toneMappingPso_.Get(); }
     ID3D12PipelineState* GetGlowCompositePSO() const { return glowCompositePso_.Get(); }
@@ -86,6 +88,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> blurVerticalPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> boxBlurHorizontalPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> boxBlurVerticalPso_;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> gaussianBlurHorizontalPso_;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> gaussianBlurVerticalPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> distortionCompositePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> toneMappingPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> glowCompositePso_;
@@ -127,6 +131,8 @@ private:
     Microsoft::WRL::ComPtr<IDxcBlob> blurVerticalPs_;
     Microsoft::WRL::ComPtr<IDxcBlob> boxBlurHorizontalPs_;
     Microsoft::WRL::ComPtr<IDxcBlob> boxBlurVerticalPs_;
+    Microsoft::WRL::ComPtr<IDxcBlob> gaussianBlurHorizontalPs_;
+    Microsoft::WRL::ComPtr<IDxcBlob> gaussianBlurVerticalPs_;
     Microsoft::WRL::ComPtr<IDxcBlob> distortionCompositePs_;
     Microsoft::WRL::ComPtr<IDxcBlob> toneMappingPs_;
     Microsoft::WRL::ComPtr<IDxcBlob> glowCompositePs_;

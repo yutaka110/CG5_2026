@@ -11,6 +11,9 @@ void DrawPostProcessPanel(
         if (pass.pipeline == "BoxBlurVertical") {
             continue;
         }
+        if (pass.pipeline == "GaussianBlurVertical") {
+            continue;
+        }
         if (pass.pipeline == "BoxBlurHorizontal") {
             PostProcessPass* verticalPass = nullptr;
             for (PostProcessPass& candidate : passes) {
@@ -46,6 +49,52 @@ void DrawPostProcessPanel(
                 }
             }
             ImGui::Text("  separable box blur: horizontal -> vertical scale=%.2f", pass.resolutionScale);
+            ImGui::PopID();
+            continue;
+        }
+        if (pass.pipeline == "GaussianBlurHorizontal") {
+            PostProcessPass* verticalPass = nullptr;
+            for (PostProcessPass& candidate : passes) {
+                if (candidate.pipeline == "GaussianBlurVertical") {
+                    verticalPass = &candidate;
+                    break;
+                }
+            }
+
+            ImGui::PushID(pass.name.c_str());
+            bool enabled = pass.enabled && (verticalPass == nullptr || verticalPass->enabled);
+            if (ImGui::Checkbox("GaussianBlur", &enabled)) {
+                pass.enabled = enabled;
+                if (verticalPass != nullptr) {
+                    verticalPass->enabled = enabled;
+                }
+            }
+            ImGui::SameLine();
+            float intensity = pass.intensity;
+            if (ImGui::SliderFloat("Intensity", &intensity, 0.0f, 4.0f)) {
+                pass.intensity = intensity;
+                if (verticalPass != nullptr) {
+                    verticalPass->intensity = intensity;
+                }
+            }
+            const char* kernels[] = { "3x3", "5x5", "7x7", "9x9" };
+            int kernel = static_cast<int>(pass.parameters.gaussianBlurKernelRadius) - 1;
+            kernel = kernel < 0 ? 0 : (kernel > 3 ? 3 : kernel);
+            if (ImGui::Combo("Kernel", &kernel, kernels, _countof(kernels))) {
+                const float kernelRadius = static_cast<float>(kernel + 1);
+                pass.parameters.gaussianBlurKernelRadius = kernelRadius;
+                if (verticalPass != nullptr) {
+                    verticalPass->parameters.gaussianBlurKernelRadius = kernelRadius;
+                }
+            }
+            float sigma = pass.parameters.gaussianBlurSigma;
+            if (ImGui::SliderFloat("Sigma", &sigma, 0.3f, 6.0f)) {
+                pass.parameters.gaussianBlurSigma = sigma;
+                if (verticalPass != nullptr) {
+                    verticalPass->parameters.gaussianBlurSigma = sigma;
+                }
+            }
+            ImGui::Text("  separable gaussian blur: horizontal -> vertical scale=%.2f", pass.resolutionScale);
             ImGui::PopID();
             continue;
         }

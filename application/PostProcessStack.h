@@ -24,6 +24,8 @@ struct PostProcessPass {
         float vignetteSoftness = 0.35f;
         float vignettePower = 1.0f;
         float boxBlurKernelRadius = 1.0f;
+        float gaussianBlurKernelRadius = 2.0f;
+        float gaussianBlurSigma = 1.5f;
     };
 
     std::string name;

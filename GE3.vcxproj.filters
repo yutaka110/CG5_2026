@@ -371,6 +371,8 @@
     <FxCompile Include="Resources\Vignette.PS.hlsl" />
     <FxCompile Include="Resources\BoxBlurHorizontal.PS.hlsl" />
     <FxCompile Include="Resources\BoxBlurVertical.PS.hlsl" />
+    <FxCompile Include="Resources\GaussianBlurHorizontal.PS.hlsl" />
+    <FxCompile Include="Resources\GaussianBlurVertical.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Matrix4x4.h">

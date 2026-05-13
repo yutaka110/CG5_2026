@@ -198,7 +198,7 @@ void PostProcessStack::ResetToVfxDefaults() {
     boxBlurHorizontal.pipeline = "BoxBlurHorizontal";
     boxBlurHorizontal.secondaryInputResource = kPostProcessOutputResource;
     boxBlurHorizontal.tertiaryInputResource = kPostProcessOutputResource;
-    boxBlurHorizontal.enabled = true;
+    boxBlurHorizontal.enabled = false;
     boxBlurHorizontal.intensity = 1.0f;
     boxBlurHorizontal.resolutionScale = 1.0f;
     boxBlurHorizontal.parameters.boxBlurKernelRadius = 1.0f;
@@ -211,11 +211,39 @@ void PostProcessStack::ResetToVfxDefaults() {
     boxBlurVertical.pipeline = "BoxBlurVertical";
     boxBlurVertical.secondaryInputResource = kPostProcessPreviousInputResource;
     boxBlurVertical.tertiaryInputResource = kPostProcessPreviousInputResource;
-    boxBlurVertical.enabled = true;
+    boxBlurVertical.enabled = false;
     boxBlurVertical.intensity = 1.0f;
     boxBlurVertical.resolutionScale = 1.0f;
     boxBlurVertical.parameters.boxBlurKernelRadius = 1.0f;
     passes_.push_back(boxBlurVertical);
+
+    PostProcessPass gaussianBlurHorizontal{};
+    gaussianBlurHorizontal.name = "GaussianBlurHorizontal";
+    gaussianBlurHorizontal.inputResource = kPostProcessOutputResource;
+    gaussianBlurHorizontal.outputResource = kPostProcessSwapOutputResource;
+    gaussianBlurHorizontal.pipeline = "GaussianBlurHorizontal";
+    gaussianBlurHorizontal.secondaryInputResource = kPostProcessOutputResource;
+    gaussianBlurHorizontal.tertiaryInputResource = kPostProcessOutputResource;
+    gaussianBlurHorizontal.enabled = true;
+    gaussianBlurHorizontal.intensity = 1.0f;
+    gaussianBlurHorizontal.resolutionScale = 1.0f;
+    gaussianBlurHorizontal.parameters.gaussianBlurKernelRadius = 2.0f;
+    gaussianBlurHorizontal.parameters.gaussianBlurSigma = 1.5f;
+    passes_.push_back(gaussianBlurHorizontal);
+
+    PostProcessPass gaussianBlurVertical{};
+    gaussianBlurVertical.name = "GaussianBlurVertical";
+    gaussianBlurVertical.inputResource = kPostProcessOutputResource;
+    gaussianBlurVertical.outputResource = "PostGaussianComposite";
+    gaussianBlurVertical.pipeline = "GaussianBlurVertical";
+    gaussianBlurVertical.secondaryInputResource = kPostProcessPreviousInputResource;
+    gaussianBlurVertical.tertiaryInputResource = kPostProcessPreviousInputResource;
+    gaussianBlurVertical.enabled = true;
+    gaussianBlurVertical.intensity = 1.0f;
+    gaussianBlurVertical.resolutionScale = 1.0f;
+    gaussianBlurVertical.parameters.gaussianBlurKernelRadius = 2.0f;
+    gaussianBlurVertical.parameters.gaussianBlurSigma = 1.5f;
+    passes_.push_back(gaussianBlurVertical);
 
     PostProcessPass grayscale{};
     grayscale.name = "Grayscale";
