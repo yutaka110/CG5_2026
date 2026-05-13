@@ -164,6 +164,19 @@ void PostProcessStack::ResetToVfxDefaults() {
     glowComposite.parameters.glowTintG = 0.95f;
     glowComposite.parameters.glowTintB = 1.2f;
     passes_.push_back(glowComposite);
+
+    PostProcessPass grayscale{};
+    grayscale.name = "Grayscale";
+    grayscale.inputResource = "PostColorA";
+    grayscale.outputResource = "PostColorB";
+    grayscale.pipeline = "Grayscale";
+    grayscale.secondaryInputResource = "PostColorA";
+    grayscale.tertiaryInputResource = "PostColorA";
+    grayscale.enabled = true;
+    grayscale.intensity = 1.0f;
+    grayscale.resolutionScale = 1.0f;
+    grayscale.parameters.grayscaleMode = 1.0f;
+    passes_.push_back(grayscale);
 }
 
 void PostProcessStack::SetEnabled(const std::string& name, bool enabled) {

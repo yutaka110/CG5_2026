@@ -27,6 +27,12 @@ void DrawPostProcessPanel(
         } else if (pass.pipeline == "GlowComposite") {
             ImGui::SliderFloat("Glow Weight", &pass.parameters.glowWeight, 0.0f, 4.0f);
             ImGui::ColorEdit3("Glow Tint", &pass.parameters.glowTintR);
+        } else if (pass.pipeline == "Grayscale") {
+            const char* modes[] = { "Average", "BT.709" };
+            int mode = pass.parameters.grayscaleMode >= 0.5f ? 1 : 0;
+            if (ImGui::Combo("Mode", &mode, modes, _countof(modes))) {
+                pass.parameters.grayscaleMode = static_cast<float>(mode);
+            }
         }
         ImGui::Text("  %s -> %s pipeline=%s scale=%.2f",
             pass.inputResource.c_str(),

@@ -136,6 +136,7 @@ bool AppPipelines::HotReloadIfNeeded(ID3D12Device* device) {
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
+        L"resources/Grayscale.PS.hlsl",
         L"resources/DebugDepthPreview.PS.hlsl",
         L"resources/DebugEmissivePreview.PS.hlsl",
     };
@@ -658,6 +659,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     distortionCompositePs_ = Compile_(L"resources/DistortionComposite.PS.hlsl", L"ps_6_0");
     toneMappingPs_ = Compile_(L"resources/ToneMapping.PS.hlsl", L"ps_6_0");
     glowCompositePs_ = Compile_(L"resources/GlowComposite.PS.hlsl", L"ps_6_0");
+    grayscalePs_ = Compile_(L"resources/Grayscale.PS.hlsl", L"ps_6_0");
     debugDepthPreviewPs_ = Compile_(L"resources/DebugDepthPreview.PS.hlsl", L"ps_6_0");
     debugEmissivePreviewPs_ = Compile_(L"resources/DebugEmissivePreview.PS.hlsl", L"ps_6_0");
 
@@ -665,7 +667,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         !trailMeshVs_ || !trailMeshStreamVs_ || !trailMeshPs_ || !distortionSpriteVs_ || !distortionSpritePs_ ||
         !gpuParticleCs_ || !trailMeshStreamCs_ || !trailMeshBuildCs_ || !compositeVs_ || !compositePs_ || !bloomExtractPs_ ||
         !bloomDownsamplePs_ || !bloomUpsamplePs_ || !blurHorizontalPs_ || !blurVerticalPs_ || !distortionCompositePs_ ||
-        !toneMappingPs_ || !glowCompositePs_ || !debugDepthPreviewPs_ || !debugEmissivePreviewPs_) {
+        !toneMappingPs_ || !glowCompositePs_ || !grayscalePs_ || !debugDepthPreviewPs_ || !debugEmissivePreviewPs_) {
         OutputDebugStringA("[AppPipelines] Shader compilation failed.\n");
         return false;
     }
@@ -886,6 +888,13 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         d.PS = { glowCompositePs_->GetBufferPointer(), glowCompositePs_->GetBufferSize() };
         hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&glowCompositePso_));
         if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(GlowComposite)", hr);
+    }
+
+    {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
+        d.PS = { grayscalePs_->GetBufferPointer(), grayscalePs_->GetBufferSize() };
+        hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&grayscalePso_));
+        if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(Grayscale)", hr);
     }
 
     {
@@ -1118,6 +1127,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
+        L"resources/Grayscale.PS.hlsl",
         L"resources/DebugDepthPreview.PS.hlsl",
         L"resources/DebugEmissivePreview.PS.hlsl",
     };

@@ -34,6 +34,9 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     if (name == "GlowComposite") {
         return pipelines.GetGlowCompositePSO();
     }
+    if (name == "Grayscale") {
+        return pipelines.GetGrayscalePSO();
+    }
     return nullptr;
 }
 
@@ -78,6 +81,10 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[8]) {
         passParams[2] = postPass.parameters.glowTintR;
         passParams[3] = postPass.parameters.glowTintG;
         passParams[4] = postPass.parameters.glowTintB;
+        return;
+    }
+    if (postPass.pipeline == "Grayscale") {
+        passParams[1] = postPass.parameters.grayscaleMode;
         return;
     }
 }
