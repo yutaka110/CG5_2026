@@ -20,6 +20,9 @@ struct PostProcessPass {
         float glowTintG = 1.0f;
         float glowTintB = 1.0f;
         float grayscaleMode = 1.0f;
+        float vignetteRadius = 0.75f;
+        float vignetteSoftness = 0.35f;
+        float vignettePower = 1.0f;
     };
 
     std::string name;

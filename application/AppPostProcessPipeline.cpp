@@ -37,6 +37,9 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     if (name == "Grayscale") {
         return pipelines.GetGrayscalePSO();
     }
+    if (name == "Vignette") {
+        return pipelines.GetVignettePSO();
+    }
     return nullptr;
 }
 
@@ -85,6 +88,12 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[8]) {
     }
     if (postPass.pipeline == "Grayscale") {
         passParams[1] = postPass.parameters.grayscaleMode;
+        return;
+    }
+    if (postPass.pipeline == "Vignette") {
+        passParams[1] = postPass.parameters.vignetteRadius;
+        passParams[2] = postPass.parameters.vignetteSoftness;
+        passParams[3] = postPass.parameters.vignettePower;
         return;
     }
 }

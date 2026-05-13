@@ -44,6 +44,7 @@ public:
     ID3D12PipelineState* GetToneMappingPSO() const { return toneMappingPso_.Get(); }
     ID3D12PipelineState* GetGlowCompositePSO() const { return glowCompositePso_.Get(); }
     ID3D12PipelineState* GetGrayscalePSO() const { return grayscalePso_.Get(); }
+    ID3D12PipelineState* GetVignettePSO() const { return vignettePso_.Get(); }
     ID3D12PipelineState* GetDebugDepthPreviewPSO() const { return debugDepthPreviewPso_.Get(); }
     ID3D12PipelineState* GetDebugEmissivePreviewPSO() const { return debugEmissivePreviewPso_.Get(); }
 
@@ -85,6 +86,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> toneMappingPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> glowCompositePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> grayscalePso_;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> vignettePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> debugDepthPreviewPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> debugEmissivePreviewPso_;
 
@@ -123,6 +125,7 @@ private:
     Microsoft::WRL::ComPtr<IDxcBlob> toneMappingPs_;
     Microsoft::WRL::ComPtr<IDxcBlob> glowCompositePs_;
     Microsoft::WRL::ComPtr<IDxcBlob> grayscalePs_;
+    Microsoft::WRL::ComPtr<IDxcBlob> vignettePs_;
     Microsoft::WRL::ComPtr<IDxcBlob> debugDepthPreviewPs_;
     Microsoft::WRL::ComPtr<IDxcBlob> debugEmissivePreviewPs_;
     std::unordered_map<std::wstring, std::filesystem::file_time_type> shaderWriteTimes_;
