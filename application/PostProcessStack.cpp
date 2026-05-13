@@ -224,7 +224,7 @@ void PostProcessStack::ResetToVfxDefaults() {
     gaussianBlurHorizontal.pipeline = "GaussianBlurHorizontal";
     gaussianBlurHorizontal.secondaryInputResource = kPostProcessOutputResource;
     gaussianBlurHorizontal.tertiaryInputResource = kPostProcessOutputResource;
-    gaussianBlurHorizontal.enabled = true;
+    gaussianBlurHorizontal.enabled = false;
     gaussianBlurHorizontal.intensity = 1.0f;
     gaussianBlurHorizontal.resolutionScale = 1.0f;
     gaussianBlurHorizontal.parameters.gaussianBlurKernelRadius = 2.0f;
@@ -238,12 +238,33 @@ void PostProcessStack::ResetToVfxDefaults() {
     gaussianBlurVertical.pipeline = "GaussianBlurVertical";
     gaussianBlurVertical.secondaryInputResource = kPostProcessPreviousInputResource;
     gaussianBlurVertical.tertiaryInputResource = kPostProcessPreviousInputResource;
-    gaussianBlurVertical.enabled = true;
+    gaussianBlurVertical.enabled = false;
     gaussianBlurVertical.intensity = 1.0f;
     gaussianBlurVertical.resolutionScale = 1.0f;
     gaussianBlurVertical.parameters.gaussianBlurKernelRadius = 2.0f;
     gaussianBlurVertical.parameters.gaussianBlurSigma = 1.5f;
     passes_.push_back(gaussianBlurVertical);
+
+    PostProcessPass prewittOutline{};
+    prewittOutline.name = "PrewittOutline";
+    prewittOutline.inputResource = kPostProcessOutputResource;
+    prewittOutline.outputResource = kPostProcessSwapOutputResource;
+    prewittOutline.pipeline = "PrewittOutline";
+    prewittOutline.secondaryInputResource = kPostProcessOutputResource;
+    prewittOutline.tertiaryInputResource = kPostProcessOutputResource;
+    prewittOutline.enabled = true;
+    prewittOutline.intensity = 1.0f;
+    prewittOutline.resolutionScale = 1.0f;
+    prewittOutline.parameters.outlineThreshold = 0.08f;
+    prewittOutline.parameters.outlineThickness = 1.0f;
+    prewittOutline.parameters.outlineSoftness = 0.04f;
+    prewittOutline.parameters.outlineColorR = 0.0f;
+    prewittOutline.parameters.outlineColorG = 0.0f;
+    prewittOutline.parameters.outlineColorB = 0.0f;
+    prewittOutline.parameters.outlineDepthWeight = 8.0f;
+    prewittOutline.parameters.outlineNormalWeight = 0.75f;
+    prewittOutline.parameters.outlineObjectWeight = 1.0f;
+    passes_.push_back(prewittOutline);
 
     PostProcessPass grayscale{};
     grayscale.name = "Grayscale";
@@ -252,7 +273,7 @@ void PostProcessStack::ResetToVfxDefaults() {
     grayscale.pipeline = "Grayscale";
     grayscale.secondaryInputResource = kPostProcessOutputResource;
     grayscale.tertiaryInputResource = kPostProcessOutputResource;
-    grayscale.enabled = true;
+    grayscale.enabled = false;
     grayscale.intensity = 1.0f;
     grayscale.resolutionScale = 1.0f;
     grayscale.parameters.grayscaleMode = 1.0f;

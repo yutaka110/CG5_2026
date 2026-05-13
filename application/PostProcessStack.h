@@ -26,6 +26,15 @@ struct PostProcessPass {
         float boxBlurKernelRadius = 1.0f;
         float gaussianBlurKernelRadius = 2.0f;
         float gaussianBlurSigma = 1.5f;
+        float outlineThreshold = 0.08f;
+        float outlineThickness = 1.0f;
+        float outlineSoftness = 0.04f;
+        float outlineColorR = 0.0f;
+        float outlineColorG = 0.0f;
+        float outlineColorB = 0.0f;
+        float outlineDepthWeight = 8.0f;
+        float outlineNormalWeight = 0.75f;
+        float outlineObjectWeight = 1.0f;
     };
 
     std::string name;

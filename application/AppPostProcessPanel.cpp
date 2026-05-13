@@ -119,6 +119,14 @@ void DrawPostProcessPanel(
         } else if (pass.pipeline == "GlowComposite") {
             ImGui::SliderFloat("Glow Weight", &pass.parameters.glowWeight, 0.0f, 4.0f);
             ImGui::ColorEdit3("Glow Tint", &pass.parameters.glowTintR);
+        } else if (pass.pipeline == "PrewittOutline") {
+            ImGui::SliderFloat("Threshold", &pass.parameters.outlineThreshold, 0.001f, 0.5f);
+            ImGui::SliderFloat("Thickness", &pass.parameters.outlineThickness, 1.0f, 4.0f);
+            ImGui::SliderFloat("Softness", &pass.parameters.outlineSoftness, 0.001f, 0.25f);
+            ImGui::SliderFloat("Depth Weight", &pass.parameters.outlineDepthWeight, 0.0f, 64.0f);
+            ImGui::SliderFloat("Normal Weight", &pass.parameters.outlineNormalWeight, 0.0f, 8.0f);
+            ImGui::SliderFloat("Object Weight", &pass.parameters.outlineObjectWeight, 0.0f, 8.0f);
+            ImGui::ColorEdit3("Outline Color", &pass.parameters.outlineColorR);
         } else if (pass.pipeline == "Grayscale") {
             const char* modes[] = { "Average", "BT.709" };
             int mode = pass.parameters.grayscaleMode >= 0.5f ? 1 : 0;

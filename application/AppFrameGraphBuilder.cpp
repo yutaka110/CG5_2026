@@ -75,11 +75,15 @@ void AppFrameGraphBuilder::Build(
         [ctx](ge3::graphics::RenderPassContext& passContext) {
             ID3D12DescriptorHeap* descriptorHeaps[] = { ctx.srvDescriptorHeap };
             passContext.commandList->SetDescriptorHeaps(1, descriptorHeaps);
-            float debugParams[8] = {
+            float debugParams[12] = {
                 ctx.runtimeState->debugDepthPreviewNear,
                 ctx.runtimeState->debugDepthPreviewFar,
                 ctx.runtimeState->debugDepthPreviewPower,
                 1.0f,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
                 0.0f,
                 0.0f,
                 0.0f,
@@ -111,11 +115,15 @@ void AppFrameGraphBuilder::Build(
         [ctx, finalPostOutput](ge3::graphics::RenderPassContext& passContext) {
             ID3D12DescriptorHeap* descriptorHeaps[] = { ctx.srvDescriptorHeap };
             passContext.commandList->SetDescriptorHeaps(1, descriptorHeaps);
-            float debugParams[8] = {
+            float debugParams[12] = {
                 ctx.runtimeState->debugEmissivePreviewBoost,
                 1.0f,
                 1.0f,
                 0.45f,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
                 0.0f,
                 0.0f,
                 0.0f,

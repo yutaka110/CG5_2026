@@ -72,6 +72,7 @@ Texture2D<float4> motionMaskTex : register(t2);
 struct PixelShaderOutput
 {
     float4 color : SV_TARGET0;
+    float4 normalObjectId : SV_TARGET1;
 };
 
 // ------------------------------------------------------------
@@ -243,5 +244,6 @@ specPowP = pow(saturate(dot(Rp, V)), max(gMaterial.shininess, 1.0f));
     }
 
     output.color = float4(outRgb, baseA);
+    output.normalObjectId = float4(SafeNormalize(input.normal) * 0.5f + 0.5f, 1.0f);
     return output;
 }

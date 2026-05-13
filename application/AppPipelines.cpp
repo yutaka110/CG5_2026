@@ -140,6 +140,7 @@ bool AppPipelines::HotReloadIfNeeded(ID3D12Device* device) {
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
+        L"resources/PrewittOutline.PS.hlsl",
         L"resources/Grayscale.PS.hlsl",
         L"resources/Vignette.PS.hlsl",
         L"resources/DebugDepthPreview.PS.hlsl",
@@ -586,7 +587,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
 
     // ------------------------------
     // Full-screen Composite RootSignature
-    // t0: SceneColor, t1: VfxAccumulation, t2: PostColor
+    // t0: primary input, t1: secondary input, t2: tertiary input
     // ------------------------------
     D3D12_DESCRIPTOR_RANGE compositeRanges[3] = {};
     for (uint32_t i = 0; i < _countof(compositeRanges); ++i) {
@@ -606,7 +607,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     compositeParams[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
     compositeParams[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     compositeParams[3].Constants.ShaderRegister = 0;
-    compositeParams[3].Constants.Num32BitValues = 8;
+    compositeParams[3].Constants.Num32BitValues = 12;
 
     D3D12_ROOT_SIGNATURE_DESC compositeRootDesc{};
     compositeRootDesc.NumParameters = _countof(compositeParams);
@@ -668,6 +669,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     distortionCompositePs_ = Compile_(L"resources/DistortionComposite.PS.hlsl", L"ps_6_0");
     toneMappingPs_ = Compile_(L"resources/ToneMapping.PS.hlsl", L"ps_6_0");
     glowCompositePs_ = Compile_(L"resources/GlowComposite.PS.hlsl", L"ps_6_0");
+    prewittOutlinePs_ = Compile_(L"resources/PrewittOutline.PS.hlsl", L"ps_6_0");
     grayscalePs_ = Compile_(L"resources/Grayscale.PS.hlsl", L"ps_6_0");
     vignettePs_ = Compile_(L"resources/Vignette.PS.hlsl", L"ps_6_0");
     debugDepthPreviewPs_ = Compile_(L"resources/DebugDepthPreview.PS.hlsl", L"ps_6_0");
@@ -679,7 +681,8 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         !bloomDownsamplePs_ || !bloomUpsamplePs_ || !blurHorizontalPs_ || !blurVerticalPs_ ||
         !boxBlurHorizontalPs_ || !boxBlurVerticalPs_ || !gaussianBlurHorizontalPs_ || !gaussianBlurVerticalPs_ ||
         !distortionCompositePs_ ||
-        !toneMappingPs_ || !glowCompositePs_ || !grayscalePs_ || !vignettePs_ || !debugDepthPreviewPs_ || !debugEmissivePreviewPs_) {
+        !toneMappingPs_ || !glowCompositePs_ || !prewittOutlinePs_ || !grayscalePs_ || !vignettePs_ ||
+        !debugDepthPreviewPs_ || !debugEmissivePreviewPs_) {
         OutputDebugStringA("[AppPipelines] Shader compilation failed.\n");
         return false;
     }
@@ -710,6 +713,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     // BlendState
     D3D12_BLEND_DESC blendDesc{};
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[1].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
     // Rasterizer
     D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -734,8 +738,9 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
     graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
     graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    graphicsPipelineStateDesc.NumRenderTargets = 1;
+    graphicsPipelineStateDesc.NumRenderTargets = 2;
     graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    graphicsPipelineStateDesc.RTVFormats[1] = DXGI_FORMAT_R16G16B16A16_FLOAT;
     graphicsPipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     graphicsPipelineStateDesc.SampleDesc.Count = 1;
     graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
@@ -932,6 +937,13 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
 
     {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
+        d.PS = { prewittOutlinePs_->GetBufferPointer(), prewittOutlinePs_->GetBufferSize() };
+        hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&prewittOutlinePso_));
+        if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(PrewittOutline)", hr);
+    }
+
+    {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d = compositeDesc;
         d.PS = { grayscalePs_->GetBufferPointer(), grayscalePs_->GetBufferSize() };
         hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&grayscalePso_));
         if (FAILED(hr)) return FailHr("CreateGraphicsPipelineState(Grayscale)", hr);
@@ -1124,6 +1136,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         auto MakeOpaqueBlend = []() {
             D3D12_BLEND_DESC bd{};
             bd.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            bd.RenderTarget[1].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
             return bd;
         };
         d.BlendState = MakeOpaqueBlend();
@@ -1142,6 +1155,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         bd.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
         bd.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
         bd.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+        bd.RenderTarget[1].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
         d.BlendState = bd;
         d.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
         hr = device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&mainAlphaPso_));
@@ -1178,6 +1192,7 @@ bool AppPipelines::Initialize(ID3D12Device* device) {
         L"resources/DistortionComposite.PS.hlsl",
         L"resources/ToneMapping.PS.hlsl",
         L"resources/GlowComposite.PS.hlsl",
+        L"resources/PrewittOutline.PS.hlsl",
         L"resources/Grayscale.PS.hlsl",
         L"resources/Vignette.PS.hlsl",
         L"resources/DebugDepthPreview.PS.hlsl",
