@@ -47,6 +47,7 @@ public:
     ID3D12PipelineState* GetDistortionCompositePSO() const { return distortionCompositePso_.Get(); }
     ID3D12PipelineState* GetToneMappingPSO() const { return toneMappingPso_.Get(); }
     ID3D12PipelineState* GetGlowCompositePSO() const { return glowCompositePso_.Get(); }
+    ID3D12PipelineState* GetPrewittOutlinePSO() const { return prewittOutlinePso_.Get(); }
     ID3D12PipelineState* GetGrayscalePSO() const { return grayscalePso_.Get(); }
     ID3D12PipelineState* GetVignettePSO() const { return vignettePso_.Get(); }
     ID3D12PipelineState* GetDebugDepthPreviewPSO() const { return debugDepthPreviewPso_.Get(); }
@@ -93,6 +94,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> distortionCompositePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> toneMappingPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> glowCompositePso_;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> prewittOutlinePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> grayscalePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> vignettePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> debugDepthPreviewPso_;
@@ -136,6 +138,7 @@ private:
     Microsoft::WRL::ComPtr<IDxcBlob> distortionCompositePs_;
     Microsoft::WRL::ComPtr<IDxcBlob> toneMappingPs_;
     Microsoft::WRL::ComPtr<IDxcBlob> glowCompositePs_;
+    Microsoft::WRL::ComPtr<IDxcBlob> prewittOutlinePs_;
     Microsoft::WRL::ComPtr<IDxcBlob> grayscalePs_;
     Microsoft::WRL::ComPtr<IDxcBlob> vignettePs_;
     Microsoft::WRL::ComPtr<IDxcBlob> debugDepthPreviewPs_;

@@ -56,7 +56,7 @@ bool EngineContext::Initialize(HWND hwnd, UINT width, UINT height, bool enableDe
     clPool_.Initialize(dev_, /*frameCount*/ swapChain_.BufferCount());
 
     // Descriptor heaps（AppMain の static g_descHeaps をここへ移す）
-    heaps_.Initialize(device, /*rtv*/ 8, /*dsv*/ 8, /*srv*/ 1024);
+    heaps_.Initialize(device, /*rtv*/ 64, /*dsv*/ 16, /*srv*/ 2048);
 
     // DepthStencil + DSV
     depthStencil_ = CreateDepthStencilTextureResource(device, (int32_t)width, (int32_t)height);

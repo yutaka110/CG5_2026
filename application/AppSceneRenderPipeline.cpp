@@ -17,6 +17,13 @@ void AppSceneRenderPipeline::RegisterPasses(const AppFrameGraphBuildContext& ctx
         DXGI_FORMAT_R8G8B8A8_UNORM,
         opaqueBlack,
         D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const float normalObjectClear[4] = {0.5f, 0.5f, 1.0f, 0.0f};
+    ctx.renderGraph->DeclarePersistentRenderTarget(
+        "SceneNormalObjectId",
+        1.0f,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
+        normalObjectClear,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
     ctx.renderGraph->DeclarePersistentDepthTarget(
         "SceneDepth",
         DXGI_FORMAT_D24_UNORM_S8_UINT,
@@ -67,6 +74,7 @@ void AppSceneRenderPipeline::RegisterPasses(const AppFrameGraphBuildContext& ctx
         ge3::graphics::RenderPassLayer::Geometry,
         {
             {"SceneColor", ge3::graphics::RenderResourceAccessType::WriteRtv},
+            {"SceneNormalObjectId", ge3::graphics::RenderResourceAccessType::WriteRtv},
             {"SceneDepth", ge3::graphics::RenderResourceAccessType::WriteDepth},
         },
         "SceneDepth",

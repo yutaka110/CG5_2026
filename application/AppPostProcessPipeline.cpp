@@ -1,6 +1,8 @@
 #include "AppPostProcessPipeline.h"
 
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "AppFrameGraphBuilder.h"
 #include "AppPipelines.h"
@@ -46,6 +48,9 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     if (name == "GlowComposite") {
         return pipelines.GetGlowCompositePSO();
     }
+    if (name == "PrewittOutline") {
+        return pipelines.GetPrewittOutlinePSO();
+    }
     if (name == "Grayscale") {
         return pipelines.GetGrayscalePSO();
     }
@@ -55,7 +60,7 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     return nullptr;
 }
 
-void BuildPassParams(const PostProcessPass& postPass, float passParams[8]) {
+void BuildPassParams(const PostProcessPass& postPass, float passParams[12]) {
     passParams[0] = postPass.intensity;
     passParams[1] = 0.0f;
     passParams[2] = 0.0f;
@@ -64,6 +69,10 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[8]) {
     passParams[5] = 0.0f;
     passParams[6] = 0.0f;
     passParams[7] = 0.0f;
+    passParams[8] = 0.0f;
+    passParams[9] = 0.0f;
+    passParams[10] = 0.0f;
+    passParams[11] = 0.0f;
 
     if (postPass.pipeline == "BloomExtract") {
         passParams[1] = postPass.parameters.bloomThresholdMin;
@@ -107,6 +116,18 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[8]) {
         passParams[4] = postPass.parameters.glowTintB;
         return;
     }
+    if (postPass.pipeline == "PrewittOutline") {
+        passParams[1] = postPass.parameters.outlineThreshold;
+        passParams[2] = postPass.parameters.outlineThickness;
+        passParams[3] = postPass.parameters.outlineSoftness;
+        passParams[4] = postPass.parameters.outlineColorR;
+        passParams[5] = postPass.parameters.outlineColorG;
+        passParams[6] = postPass.parameters.outlineColorB;
+        passParams[7] = postPass.parameters.outlineDepthWeight;
+        passParams[8] = postPass.parameters.outlineNormalWeight;
+        passParams[9] = postPass.parameters.outlineObjectWeight;
+        return;
+    }
     if (postPass.pipeline == "Grayscale") {
         passParams[1] = postPass.parameters.grayscaleMode;
         return;
@@ -132,15 +153,22 @@ void AppPostProcessPipeline::RegisterPasses(const AppFrameGraphBuildContext& ctx
             postPass.outputResource,
             postPass.resolutionScale,
             DXGI_FORMAT_R8G8B8A8_UNORM);
+        std::vector<ge3::graphics::RenderPassResourceAccess> accesses = {
+            {postPass.inputResource, ge3::graphics::RenderResourceAccessType::ReadSrv},
+            {postPass.outputResource, ge3::graphics::RenderResourceAccessType::WriteRtv},
+        };
+        if (postPass.pipeline == "PrewittOutline") {
+            accesses.push_back({"SceneDepth", ge3::graphics::RenderResourceAccessType::ReadDepth});
+            accesses.push_back({"SceneNormalObjectId", ge3::graphics::RenderResourceAccessType::ReadSrv});
+        } else {
+            accesses.push_back({postPass.secondaryInputResource, ge3::graphics::RenderResourceAccessType::ReadSrv});
+            accesses.push_back({postPass.tertiaryInputResource, ge3::graphics::RenderResourceAccessType::ReadSrv});
+        }
+
         ctx.renderGraph->AddPass({
             std::string("PostProcess.") + postPass.name,
             ge3::graphics::RenderPassLayer::PostProcess,
-            {
-                {postPass.inputResource, ge3::graphics::RenderResourceAccessType::ReadSrv},
-                {postPass.secondaryInputResource, ge3::graphics::RenderResourceAccessType::ReadSrv},
-                {postPass.tertiaryInputResource, ge3::graphics::RenderResourceAccessType::ReadSrv},
-                {postPass.outputResource, ge3::graphics::RenderResourceAccessType::WriteRtv},
-            },
+            std::move(accesses),
             "",
             [ctx, postPass](ge3::graphics::RenderPassContext& passContext) {
                 ID3D12DescriptorHeap* descriptorHeaps[] = { ctx.srvDescriptorHeap };
@@ -149,17 +177,29 @@ void AppPostProcessPipeline::RegisterPasses(const AppFrameGraphBuildContext& ctx
                 if (pipelineState == nullptr) {
                     return;
                 }
-                float passParams[8] = {};
+                float passParams[12] = {};
                 BuildPassParams(postPass, passParams);
-                ctx.vfxRenderTargets->ExecutePostProcessPass(
-                    passContext.commandList,
-                    postPass.outputResource,
-                    ctx.appPipelines->GetCompositeRootSignature(),
-                    pipelineState,
-                    postPass.inputResource,
-                    postPass.secondaryInputResource,
-                    postPass.tertiaryInputResource,
-                    passParams);
+                if (postPass.pipeline == "PrewittOutline") {
+                    ctx.vfxRenderTargets->ExecuteDebugPreviewPass(
+                        passContext.commandList,
+                        postPass.outputResource,
+                        ctx.appPipelines->GetCompositeRootSignature(),
+                        pipelineState,
+                        ctx.vfxRenderTargets->GetSrvHandle(postPass.inputResource),
+                        ctx.depthTextureHandle,
+                        ctx.vfxRenderTargets->GetSrvHandle("SceneNormalObjectId"),
+                        passParams);
+                } else {
+                    ctx.vfxRenderTargets->ExecutePostProcessPass(
+                        passContext.commandList,
+                        postPass.outputResource,
+                        ctx.appPipelines->GetCompositeRootSignature(),
+                        pipelineState,
+                        postPass.inputResource,
+                        postPass.secondaryInputResource,
+                        postPass.tertiaryInputResource,
+                        passParams);
+                }
         }});
     }
 
@@ -176,11 +216,15 @@ void AppPostProcessPipeline::RegisterPasses(const AppFrameGraphBuildContext& ctx
         [ctx, finalOutputResource](ge3::graphics::RenderPassContext& passContext) {
             ID3D12DescriptorHeap* descriptorHeaps[] = { ctx.srvDescriptorHeap };
             passContext.commandList->SetDescriptorHeaps(1, descriptorHeaps);
-            const float compositeParams[8] = {
+            const float compositeParams[12] = {
                 0.0f,
                 0.0f,
                 0.0f,
                 1.0f,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
                 0.0f,
                 0.0f,
                 0.0f,
