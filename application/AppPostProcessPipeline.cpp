@@ -63,6 +63,9 @@ ID3D12PipelineState* ResolvePostProcessPso(const AppPipelines& pipelines, const 
     if (name == "DissolvePreview") {
         return pipelines.GetDissolvePreviewPSO();
     }
+    if (name == "RandomPreview") {
+        return pipelines.GetRandomPreviewPSO();
+    }
     return nullptr;
 }
 
@@ -163,6 +166,13 @@ void BuildPassParams(const PostProcessPass& postPass, float passParams[12]) {
         passParams[9] = postPass.parameters.dissolvePreviewEdgeB;
         passParams[10] = postPass.parameters.dissolvePreviewPlaneScaleX;
         passParams[11] = postPass.parameters.dissolvePreviewPlaneScaleY;
+        return;
+    }
+    if (postPass.pipeline == "RandomPreview") {
+        passParams[1] = postPass.parameters.randomMode;
+        passParams[2] = postPass.parameters.randomScale;
+        passParams[3] = postPass.parameters.randomSpeed;
+        passParams[4] = postPass.parameters.randomTime;
         return;
     }
 }
