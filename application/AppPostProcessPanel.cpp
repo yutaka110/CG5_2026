@@ -150,6 +150,15 @@ void DrawPostProcessPanel(
             ImGui::ColorEdit3("Edge Color", &pass.parameters.dissolvePreviewEdgeR);
             ImGui::SliderFloat("Plane Width", &pass.parameters.dissolvePreviewPlaneScaleX, 0.1f, 1.0f);
             ImGui::SliderFloat("Plane Height", &pass.parameters.dissolvePreviewPlaneScaleY, 0.1f, 1.0f);
+        } else if (pass.pipeline == "RandomPreview") {
+            const char* modes[] = { "Grayscale", "Multiply" };
+            int mode = pass.parameters.randomMode >= 0.5f ? 1 : 0;
+            if (ImGui::Combo("Mode", &mode, modes, _countof(modes))) {
+                pass.parameters.randomMode = static_cast<float>(mode);
+            }
+            ImGui::SliderFloat("Scale", &pass.parameters.randomScale, 1.0f, 1024.0f, "%.0f");
+            ImGui::SliderFloat("Speed", &pass.parameters.randomSpeed, 0.0f, 20.0f, "%.1f");
+            ImGui::Text("  Speed 0 keeps the random pattern fixed.");
         }
         ImGui::Text("  %s -> %s pipeline=%s scale=%.2f",
             pass.inputResource.c_str(),

@@ -319,7 +319,7 @@ void PostProcessStack::ResetToVfxDefaults() {
     dissolvePreview.pipeline = "DissolvePreview";
     dissolvePreview.secondaryInputResource = kPostProcessOutputResource;
     dissolvePreview.tertiaryInputResource = kPostProcessOutputResource;
-    dissolvePreview.enabled = true;
+    dissolvePreview.enabled = false;
     dissolvePreview.intensity = 1.0f;
     dissolvePreview.resolutionScale = 1.0f;
     dissolvePreview.parameters.dissolvePreviewThreshold = 0.5f;
@@ -334,6 +334,22 @@ void PostProcessStack::ResetToVfxDefaults() {
     dissolvePreview.parameters.dissolvePreviewPlaneScaleX = 0.7f;
     dissolvePreview.parameters.dissolvePreviewPlaneScaleY = 0.55f;
     passes_.push_back(dissolvePreview);
+
+    PostProcessPass randomPreview{};
+    randomPreview.name = "RandomPreview";
+    randomPreview.inputResource = kPostProcessOutputResource;
+    randomPreview.outputResource = kPostProcessSwapOutputResource;
+    randomPreview.pipeline = "RandomPreview";
+    randomPreview.secondaryInputResource = kPostProcessOutputResource;
+    randomPreview.tertiaryInputResource = kPostProcessOutputResource;
+    randomPreview.enabled = true;
+    randomPreview.intensity = 0.1f;
+    randomPreview.resolutionScale = 1.0f;
+    randomPreview.parameters.randomMode = 0.0f;
+    randomPreview.parameters.randomScale = 256.0f;
+    randomPreview.parameters.randomSpeed = 0.0f;
+    randomPreview.parameters.randomTime = 0.0f;
+    passes_.push_back(randomPreview);
 }
 
 void PostProcessStack::SetEnabled(const std::string& name, bool enabled) {
@@ -385,6 +401,13 @@ void PostProcessStack::TriggerRadialBlurEvent(
 }
 
 void PostProcessStack::UpdateRuntimeEffects(float deltaTime) {
+    const float safeDeltaTime = (std::max)(0.0f, deltaTime);
+    if (PostProcessPass* randomPreview = FindPass("RandomPreview")) {
+        if (randomPreview->enabled) {
+            randomPreview->parameters.randomTime += safeDeltaTime;
+        }
+    }
+
     if (!runtimeRadialBlur_.active) {
         return;
     }
@@ -395,7 +418,7 @@ void PostProcessStack::UpdateRuntimeEffects(float deltaTime) {
         return;
     }
 
-    runtimeRadialBlur_.elapsedSeconds += (std::max)(0.0f, deltaTime);
+    runtimeRadialBlur_.elapsedSeconds += safeDeltaTime;
     const float t = std::clamp(
         runtimeRadialBlur_.elapsedSeconds / runtimeRadialBlur_.durationSeconds,
         0.0f,

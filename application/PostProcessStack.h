@@ -50,6 +50,10 @@ struct PostProcessPass {
         float dissolvePreviewEdgeB = 0.2f;
         float dissolvePreviewPlaneScaleX = 0.7f;
         float dissolvePreviewPlaneScaleY = 0.55f;
+        float randomMode = 0.0f;
+        float randomScale = 256.0f;
+        float randomSpeed = 0.0f;
+        float randomTime = 0.0f;
     };
 
     std::string name;
